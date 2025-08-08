@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { toast, Toaster } from 'react-hot-toast';
-import { UserPlusIcon, LogInIcon } from 'lucide-react';
+import { LogInIcon } from 'lucide-react';
 
 export function RegistrationScreen() {
   const navigate = useNavigate();

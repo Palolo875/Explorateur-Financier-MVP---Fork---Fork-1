@@ -3,18 +3,23 @@ import { GlassCard } from './ui/GlassCard';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
+import { useFinanceStore } from '../stores/financeStore';
 import { toast, Toaster } from 'react-hot-toast';
-import { LogInIcon, UserPlusIcon } from 'lucide-react';
+import { LogInIcon } from 'lucide-react';
 
 export function LoginScreen() {
   const navigate = useNavigate();
   const { themeColors } = useTheme();
+  const { login } = useFinanceStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     // In a real app, you would handle authentication here
+    const user = { id: '1', email, name: 'Test User' };
+    const token = 'fake-jwt-token';
+    login(user, token);
     toast.success('Connexion réussie !');
     setTimeout(() => {
       navigate('/dashboard');

@@ -1,6 +1,14 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { FinancialData, EmotionalContext, UserSettings } from '../types/finance';
+import { FinancialData, EmotionalContext, UserSettings, User } from '../types/finance';
+
+interface AuthState {
+  isLoggedIn: boolean;
+  user: User | null;
+  token: string | null;
+  login: (user: User, token: string) => void;
+  logout: () => void;
+}
 
 interface FinanceState {
   // User data
@@ -28,6 +36,8 @@ interface FinanceState {
   resetData: () => void;
 }
 
+interface AppState extends FinanceState, AuthState {}
+
 const defaultFinancialData: FinancialData = {
   incomes: [],
   expenses: [],
@@ -54,7 +64,7 @@ const defaultUserSettings: UserSettings = {
   privacyLevel: 'standard',
 };
 
-export const useFinanceStore = create<FinanceState>()(
+export const useFinanceStore = create<AppState>()(
   persist(
     (set, get) => ({
       // Initial state
@@ -66,8 +76,13 @@ export const useFinanceStore = create<FinanceState>()(
       questionHistory: [],
       financialSnapshots: [],
       userCity: 'Paris',
+      isLoggedIn: false,
+      user: null,
+      token: null,
 
       // Actions
+      login: (user, token) => set({ isLoggedIn: true, user, token }),
+      logout: () => set({ isLoggedIn: false, user: null, token: null }),
       setUserQuestion: question => set({ userQuestion: question }),
       setUserCity: city => set({ userCity: city }),
       setFinancialData: data => set({ financialData: data }),
@@ -107,6 +122,9 @@ export const useFinanceStore = create<FinanceState>()(
         questionHistory: state.questionHistory,
         financialSnapshots: state.financialSnapshots,
         userCity: state.userCity,
+        isLoggedIn: state.isLoggedIn,
+        user: state.user,
+        token: state.token,
       }),
     }
   )

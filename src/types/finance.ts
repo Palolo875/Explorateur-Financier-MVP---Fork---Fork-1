@@ -123,3 +123,9 @@ export interface HistoricalData {
   savings: number;
   investments: number;
 }
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+}

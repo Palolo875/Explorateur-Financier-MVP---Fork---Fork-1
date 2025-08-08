@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboardIcon, LineChartIcon, BarChart3Icon, UserIcon, SettingsIcon, LogOutIcon, MenuIcon, XIcon, BookOpenIcon, GraduationCapIcon, MessageSquareIcon } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { useFinanceStore } from '../stores/financeStore';
 import { motion } from 'framer-motion';
 interface LayoutProps {
   children: React.ReactNode;
@@ -15,6 +16,7 @@ export function Layout({
   const {
     themeColors
   } = useTheme();
+  const { logout } = useFinanceStore();
   const isActive = (path: string) => {
     return location.pathname === path;
   };
@@ -52,8 +54,8 @@ export function Layout({
     path: '/feedback'
   }];
   const handleLogout = () => {
-    // In a real app, you would handle logout logic here
-    navigate('/');
+    logout();
+    navigate('/login');
   };
   return <div className="min-h-screen flex">
       {/* Sidebar for desktop */}
