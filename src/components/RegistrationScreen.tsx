@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { toast, Toaster } from 'react-hot-toast';
-import { LogInIcon } from 'lucide-react';
+import { UserPlusIcon, LogInIcon } from 'lucide-react';
 
 export function RegistrationScreen() {
   const navigate = useNavigate();
@@ -15,15 +15,23 @@ export function RegistrationScreen() {
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !password || !confirmPassword) {
+      toast.error('Veuillez remplir tous les champs.');
+      return;
+    }
     if (password !== confirmPassword) {
       toast.error('Les mots de passe ne correspondent pas.');
       return;
     }
     // In a real app, you would handle registration here
-    toast.success('Inscription réussie !');
-    setTimeout(() => {
-      navigate('/login');
-    }, 1000);
+    try {
+      toast.success('Inscription réussie !');
+      setTimeout(() => {
+        navigate('/login');
+      }, 1000);
+    } catch (error) {
+      toast.error("Erreur lors de l'inscription.");
+    }
   };
 
   return (
@@ -39,8 +47,9 @@ export function RegistrationScreen() {
           <form onSubmit={handleRegister}>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm mb-1">Email</label>
+                <label htmlFor="email" className="block text-sm mb-1">Email</label>
                 <input
+                  id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -49,8 +58,10 @@ export function RegistrationScreen() {
                 />
               </div>
               <div>
-                <label className="block text-sm mb-1">Mot de passe</label>
+                <label htmlFor="password"
+                       className="block text-sm mb-1">Mot de passe</label>
                 <input
+                  id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -59,8 +70,10 @@ export function RegistrationScreen() {
                 />
               </div>
               <div>
-                <label className="block text-sm mb-1">Confirmer le mot de passe</label>
+                <label htmlFor="confirmPassword"
+                       className="block text-sm mb-1">Confirmer le mot de passe</label>
                 <input
+                  id="confirmPassword"
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
