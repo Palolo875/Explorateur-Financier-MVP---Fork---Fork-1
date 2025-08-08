@@ -1,7 +1,6 @@
 import React, { createContext, useContext } from 'react';
 import { useFinanceStore } from '../stores/financeStore';
-import { FinancialData, FinancialInsight } from '../types/finance';
-import { externalApiService } from '../services/ExternalAPIService';
+import { FinancialData, FinancialInsight, SimulationParams, SimulationResult } from '../types/finance';
 interface FinanceContextType {
   userQuestion: string;
   setUserQuestion: (question: string) => void;
@@ -10,18 +9,18 @@ interface FinanceContextType {
   emotionalContext: EmotionalContext;
   setEmotionalContext: (context: EmotionalContext) => void;
   generateInsights: () => Promise<FinancialInsight[]>;
-  runSimulation: (params: any) => Promise<any>;
-  getFinancialHealth: () => Promise<any>;
-  detectHiddenFees: () => Promise<any>;
-  getRelatedNews: (query: string) => Promise<any>;
-  getMarketData: (symbol?: string) => Promise<any>;
-  getQuoteOfTheDay: () => Promise<any>;
-  getFinancialAdvice: () => Promise<any>;
+  runSimulation: (params: SimulationParams) => Promise<SimulationResult>;
+  getFinancialHealth: () => Promise<Record<string, unknown>>;
+  detectHiddenFees: () => Promise<Record<string, unknown>>;
+  getRelatedNews: (query: string) => Promise<unknown[]>;
+  getMarketData: (symbol?: string) => Promise<Record<string, unknown>>;
+  getQuoteOfTheDay: () => Promise<Record<string, unknown>>;
+  getFinancialAdvice: () => Promise<Record<string, unknown>>;
   calculateTotalIncome: () => number;
   calculateTotalExpenses: () => number;
   calculateNetWorth: () => number;
-  getHistoricalData: () => Promise<any[]>;
-  getPredictions: () => Promise<any>;
+  getHistoricalData: () => Promise<unknown[]>;
+  getPredictions: () => Promise<Record<string, unknown>>;
   getFinancialScore: () => Promise<number>;
   refreshData: () => Promise<void>;
 }
@@ -30,10 +29,6 @@ interface EmotionalContext {
   tags: string[];
   financialPersonality?: 'saver' | 'spender' | 'avoider' | 'planner' | 'risk-taker' | 'security-seeker';
 }
-const defaultEmotionalContext: EmotionalContext = {
-  mood: 5,
-  tags: []
-};
 const defaultFinancialData: FinancialData = {
   incomes: [],
   expenses: [],
@@ -60,7 +55,6 @@ export function FinanceProvider({
   const generateInsights = async (): Promise<FinancialInsight[]> => {
     // Simuler un délai d'analyse
     await new Promise(resolve => setTimeout(resolve, 500));
-    const storeData = store.financialData || defaultFinancialData;
     const insights: FinancialInsight[] = [];
     // Calculer les totaux
     const totalIncome = calculateTotalIncome();
@@ -96,6 +90,10 @@ export function FinanceProvider({
     const totalLiabilities = (financialData.liabilities?.reduce((sum, liability) => sum + (typeof liability.value === 'number' ? liability.value : parseFloat(liability.value) || 0), 0) || 0) + (financialData.debts?.reduce((sum, debt) => sum + (typeof debt.value === 'number' ? debt.value : parseFloat(debt.value) || 0), 0) || 0);
     return totalAssets - totalLiabilities;
   };
+  const refreshData = async () => {
+    // In a real app, this would refetch data from the backend
+    console.log('Refreshing data...');
+  };
   return <FinanceContext.Provider value={{
     userQuestion: store.userQuestion,
     setUserQuestion: store.setUserQuestion,
@@ -117,7 +115,7 @@ export function FinanceProvider({
     getHistoricalData: async () => [],
     getPredictions: async () => ({}),
     getFinancialScore: async () => 0,
-    refreshData: async () => {}
+    refreshData
   }}>
       {children}
     </FinanceContext.Provider>;

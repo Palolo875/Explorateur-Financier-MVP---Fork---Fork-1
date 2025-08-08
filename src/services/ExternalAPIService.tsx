@@ -1,4 +1,3 @@
-import React, { useEffect, useState, Component } from 'react';
 // Type definitions
 interface NewsArticle {
   title: string;
@@ -24,34 +23,6 @@ interface WeatherData {
   location: string;
   icon: string;
 }
-interface ExchangeRates {
-  base: string;
-  date: string;
-  rates: Record<string, number>;
-}
-interface QuoteData {
-  content: string;
-  author: string;
-}
-interface AdviceData {
-  id: number;
-  advice: string;
-}
-// CryptoData interface
-interface CryptoData {
-  id: string;
-  symbol: string;
-  name: string;
-  current_price: number;
-  price_change_percentage_24h: number;
-  image: string;
-}
-interface ActivityData {
-  activity: string;
-  type: string;
-  participants: number;
-  price: number;
-}
 interface MarketIndexData {
   name: string;
   value: number;
@@ -67,10 +38,10 @@ interface CountryEconomicData {
 class ExternalAPIService {
   private static instance: ExternalAPIService;
   private cache: Map<string, {
-    data: any;
+    data: unknown;
     timestamp: number;
   }>;
-  private cacheDuration: number = 30 * 60 * 1000; // 30 minutes par défaut
+  private cacheDuration = 30 * 60 * 1000; // 30 minutes par défaut
   private constructor() {
     this.cache = new Map();
     // Réduire la durée du cache pour les données météo et autres données volatiles
@@ -110,7 +81,7 @@ class ExternalAPIService {
     }
     return null;
   }
-  private setCache(key: string, data: any): void {
+  private setCache(key: string, data: unknown): void {
     this.cache.set(key, {
       data,
       timestamp: Date.now()
@@ -149,7 +120,7 @@ class ExternalAPIService {
     }
   }
   // News API - Get news articles by keywords using Gnews (API gratuite avec limite)
-  public async getNewsArticles(keywords: string, count: number = 5): Promise<NewsArticle[]> {
+  public async getNewsArticles(keywords: string, count = 5): Promise<NewsArticle[]> {
     return this.withFallback(async () => {
       // Utilisation de l'API Gnews (gratuite avec limite)
       const apiKey = 'c01873f1471c862b7b787e3e82f9a561'; // Clé démo - à remplacer par la vôtre
@@ -160,7 +131,15 @@ class ExternalAPIService {
       }
       const data = await response.json();
       // Transformer les données au format attendu
-      return data.articles?.map((article: any) => ({
+      interface GNewsArticle {
+        title: string;
+        description: string;
+        url: string;
+        source: { name: string };
+        publishedAt: string;
+        image: string;
+      }
+      return data.articles?.map((article: GNewsArticle) => ({
         title: article.title,
         description: article.description,
         url: article.url,
@@ -224,13 +203,13 @@ class ExternalAPIService {
     const change = (Math.random() * 10 - 5).toFixed(2);
     const changePercent = (parseFloat(change) / parseFloat(price) * 100).toFixed(2);
     return {
-      symbol: symbol,
-      price: price,
-      change: change,
-      changePercent: changePercent
+      symbol,
+      price,
+      change,
+      changePercent
     };
   }
-  public async getWeatherData(city: string, country: string = 'FR'): Promise<WeatherData> {
+  public async getWeatherData(city: string, country = 'FR'): Promise<WeatherData> {
     return this.withFallback(async () => {
       // Mock implementation for now
       return {
@@ -304,7 +283,7 @@ class ExternalAPIService {
 // Create singleton instance
 export const externalApiService = ExternalAPIService.getInstance();
 // Export hooks
-export function useWeatherData(city: string, country: string = 'FR') {
+export function useWeatherData(city: string, country = 'FR') {
   const [data, setData] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

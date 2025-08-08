@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { externalApiService } from '../services/ExternalAPIService';
 import { useWeatherData } from '../services/ExternalAPIService';
+import { NewsArticle } from '../types/finance';
 export function QuestionScreen() {
   const [question, setQuestion] = useState('');
   const {
@@ -27,9 +28,8 @@ export function QuestionScreen() {
     content: string;
     author: string;
   } | null>(null);
-  const [relatedNews, setRelatedNews] = useState<any[]>([]);
+  const [relatedNews, setRelatedNews] = useState<NewsArticle[]>([]);
   const [advice, setAdvice] = useState<string | null>(null);
-  const [newsLoading, setNewsLoading] = useState(false);
   // Récupérer une citation inspirante au chargement
   useEffect(() => {
     const fetchQuote = async () => {

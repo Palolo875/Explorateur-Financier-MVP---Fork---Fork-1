@@ -1,13 +1,11 @@
-import React, { useEffect, useState, Component } from 'react';
+import React, { useEffect, useState } from 'react';
 import { GlassCard } from './ui/GlassCard';
-import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useFinance } from '../context/FinanceContext';
-import { TargetIcon, PlusIcon, TrashIcon, EditIcon, CheckIcon, XIcon, TrendingUpIcon, CalendarIcon, HomeIcon, CarIcon, BriefcaseIcon, GraduationCapIcon, UmbrellaIcon, PlaneIcon, HeartIcon, LaptopIcon, ClockIcon, AlertCircleIcon, ChevronRightIcon } from 'lucide-react';
+import { TargetIcon, PlusIcon, TrashIcon, EditIcon, TrendingUpIcon, CalendarIcon, HomeIcon, CarIcon, BriefcaseIcon, GraduationCapIcon, UmbrellaIcon, PlaneIcon, HeartIcon, LaptopIcon, AlertCircleIcon, ChevronRightIcon } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import { format, addMonths, differenceInMonths, parseISO } from 'date-fns';
-import { fr } from 'date-fns/locale';
 // Types pour les objectifs financiers
 interface FinancialGoal {
   id: string;
@@ -23,13 +21,10 @@ interface FinancialGoal {
   notes?: string;
 }
 export function GoalTracker() {
-  const navigate = useNavigate();
   const {
-    theme,
     themeColors
   } = useTheme();
   const {
-    financialData,
     calculateNetWorth
   } = useFinance();
   // États

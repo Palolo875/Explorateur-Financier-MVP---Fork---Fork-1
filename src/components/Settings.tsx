@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { GlassCard } from './ui/GlassCard';
-import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { toast, Toaster } from 'react-hot-toast';
-import { PaletteIcon, GlobeIcon, SaveIcon, MoonIcon, SunIcon, BellIcon, CheckIcon, DownloadIcon, LockIcon, UnlockIcon, RefreshCwIcon, TrashIcon, AlertCircleIcon, EyeIcon, EyeOffIcon, SettingsIcon } from 'lucide-react';
+import { PaletteIcon, GlobeIcon, SaveIcon, MoonIcon, SunIcon, BellIcon, CheckIcon, DownloadIcon, LockIcon, UnlockIcon, RefreshCwIcon, TrashIcon, AlertCircleIcon, EyeOffIcon, SettingsIcon } from 'lucide-react';
 export function Settings() {
-  const navigate = useNavigate();
   const {
     theme,
     setTheme,
@@ -313,15 +311,15 @@ export function Settings() {
               <div className={`space-y-3 ${!notificationsEnabled ? 'opacity-50' : ''}`}>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Rappels d'objectifs</span>
-                  <input type="checkbox" checked={notificationsEnabled} disabled={!notificationsEnabled} onChange={() => {}} className="rounded bg-black/20 border-white/10 text-indigo-600 focus:ring-indigo-500" />
+                  <input type="checkbox" checked={notificationsEnabled} disabled={!notificationsEnabled} onChange={() => { /* Not implemented */ }} className="rounded bg-black/20 border-white/10 text-indigo-600 focus:ring-indigo-500" />
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Mises à jour financières</span>
-                  <input type="checkbox" checked={notificationsEnabled} disabled={!notificationsEnabled} onChange={() => {}} className="rounded bg-black/20 border-white/10 text-indigo-600 focus:ring-indigo-500" />
+                  <input type="checkbox" checked={notificationsEnabled} disabled={!notificationsEnabled} onChange={() => { /* Not implemented */ }} className="rounded bg-black/20 border-white/10 text-indigo-600 focus:ring-indigo-500" />
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Conseils personnalisés</span>
-                  <input type="checkbox" checked={notificationsEnabled} disabled={!notificationsEnabled} onChange={() => {}} className="rounded bg-black/20 border-white/10 text-indigo-600 focus:ring-indigo-500" />
+                  <input type="checkbox" checked={notificationsEnabled} disabled={!notificationsEnabled} onChange={() => { /* Not implemented */ }} className="rounded bg-black/20 border-white/10 text-indigo-600 focus:ring-indigo-500" />
                 </div>
               </div>
             </div>

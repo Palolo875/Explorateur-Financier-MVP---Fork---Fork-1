@@ -22,9 +22,13 @@ interface ThemeContextType {
 // Create context with default values
 const ThemeContext = createContext<ThemeContextType>({
   theme: 'dark',
-  setTheme: () => {},
+  setTheme: () => {
+    throw new Error('setTheme function must be overridden by ThemeProvider');
+  },
   colorScheme: 'indigo',
-  setColorScheme: () => {},
+  setColorScheme: () => {
+    throw new Error('setColorScheme function must be overridden by ThemeProvider');
+  },
   themeColors: {
     primary: 'from-indigo-500 to-purple-600',
     secondary: 'from-amber-500 to-yellow-600',

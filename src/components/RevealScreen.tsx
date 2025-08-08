@@ -1,20 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { GlassCard } from './ui/GlassCard';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useFinance } from '../context/FinanceContext';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, XIcon, AlertCircleIcon, TrendingUpIcon, TrendingDownIcon, BarChart3Icon, PiggyBankIcon, CreditCardIcon, LineChartIcon, CircleDollarSignIcon, SparklesIcon } from 'lucide-react';
+import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, AlertCircleIcon, TrendingUpIcon, TrendingDownIcon, BarChart3Icon, PiggyBankIcon, CreditCardIcon, LineChartIcon, CircleDollarSignIcon, SparklesIcon } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
-import { FinancialInsight } from '../types/finance';
+import { FinancialInsight, CryptoData, StockMarketData } from '../types/finance';
 import { externalApiService } from '../services/ExternalAPIService';
 import { useWeatherData, useMarketIndices } from '../services/ExternalAPIService';
 export function RevealScreen() {
   const navigate = useNavigate();
   const {
-    theme,
     themeColors
   } = useTheme();
   const {
@@ -28,14 +25,46 @@ export function RevealScreen() {
   const [activeTab, setActiveTab] = useState<'insights' | 'whatif' | 'recommendations'>('insights');
   const [error, setError] = useState<string | null>(null);
   // API data states
-  const [cryptoLoading, setCryptoLoading] = useState(false);
-  const [cryptoData, setCryptoData] = useState<any[]>([]);
+  const [cryptoData, setCryptoData] = useState<CryptoData[]>([]);
   const [activitySuggestion, setActivitySuggestion] = useState<string | null>(null);
-  const [stockData, setStockData] = useState<any | null>(null);
+  const [stockData, setStockData] = useState<StockMarketData | null>(null);
   // Financial calculations
   const totalIncome = financialData?.incomes?.reduce((sum, item) => sum + (typeof item.value === 'number' ? item.value : parseFloat(item.value) || 0), 0) || 0;
   const totalExpenses = financialData?.expenses?.reduce((sum, item) => sum + (typeof item.value === 'number' ? item.value : parseFloat(item.value) || 0), 0) || 0;
   const balance = totalIncome - totalExpenses;
+  // Fetch crypto data
+  const fetchCryptoData = useCallback(async () => {
+    try {
+      const apiService = externalApiService;
+      const data = await apiService.getCryptoData('eur', 3);
+      setCryptoData(data || []);
+    } catch (error) {
+      console.error('Error fetching crypto data:', error);
+    }
+  }, []);
+  // Fetch activity suggestion
+  const fetchActivity = useCallback(async () => {
+    try {
+      const apiService = externalApiService;
+      const activity = await apiService.getActivitySuggestion();
+      if (activity) {
+        setActivitySuggestion(activity.activity);
+      }
+    } catch (error) {
+      console.error('Error fetching activity:', error);
+    }
+  }, []);
+  // Fetch stock market data
+  const fetchStockData = useCallback(async () => {
+    try {
+      const apiService = externalApiService;
+      const data = await apiService.getStockQuote('MSFT');
+      setStockData(data);
+    } catch (error) {
+      console.error('Error fetching stock data:', error);
+    }
+  }, []);
+
   // Load insights and API data
   useEffect(() => {
     const loadData = async () => {
@@ -60,7 +89,7 @@ export function RevealScreen() {
       }
     };
     loadData();
-  }, []);
+  }, [generateInsights, fetchCryptoData, fetchActivity, fetchStockData]);
   // Utiliser les nouveaux hooks
   const {
     data: weatherData
@@ -68,41 +97,6 @@ export function RevealScreen() {
   const {
     data: marketIndices
   } = useMarketIndices();
-  // Fetch crypto data
-  const fetchCryptoData = async () => {
-    setCryptoLoading(true);
-    try {
-      const apiService = externalApiService;
-      const data = await apiService.getCryptoData('eur', 3);
-      setCryptoData(data || []);
-    } catch (error) {
-      console.error('Error fetching crypto data:', error);
-    } finally {
-      setCryptoLoading(false);
-    }
-  };
-  // Fetch activity suggestion
-  const fetchActivity = async () => {
-    try {
-      const apiService = externalApiService;
-      const activity = await apiService.getActivitySuggestion();
-      if (activity) {
-        setActivitySuggestion(activity.activity);
-      }
-    } catch (error) {
-      console.error('Error fetching activity:', error);
-    }
-  };
-  // Fetch stock market data
-  const fetchStockData = async () => {
-    try {
-      const apiService = externalApiService;
-      const data = await apiService.getStockQuote('MSFT');
-      setStockData(data);
-    } catch (error) {
-      console.error('Error fetching stock data:', error);
-    }
-  };
   // Calculate crypto equivalent of an expense
   const calculateCryptoEquivalent = (amount: number) => {
     if (cryptoData.length > 0 && cryptoData[0].current_price) {

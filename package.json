@@ -17,13 +17,10 @@
     "framer-motion": "^11.5.4",
     "react-hot-toast": "^2.4.1",
     "date-fns": "^4.0.0",
-    "date-fns/locale": "latest",
     "zustand": "latest",
-    "zustand/middleware": "latest",
     "dayjs": "latest",
     "recharts": "^2.12.7",
-    "react-countup": "^6.5.3",
-    "dayjs/locale/fr": "latest"
+    "react-countup": "^6.5.3"
   },
   "devDependencies": {
     "@types/node": "^20.11.18",

@@ -5,7 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useFinance } from '../context/FinanceContext';
 import { GlassCard } from './ui/GlassCard';
 import { RevealAnimation } from './ui/RevealAnimation';
-import { ArrowLeftIcon, ArrowRightIcon, PlusIcon, TrashIcon, EditIcon, RefreshCwIcon, SaveIcon, CreditCardIcon, WalletIcon, BriefcaseIcon, CoinsIcon, BadgeEuroIcon, HomeIcon, ShoppingBagIcon, CarIcon, UtensilsIcon, HeartIcon, GraduationCapIcon, SmileIcon, CheckIcon, XIcon, PiggyBankIcon, TrendingUpIcon, AlertCircleIcon, CloudRainIcon, SunIcon, CloudIcon } from 'lucide-react';
+import { ArrowLeftIcon, ArrowRightIcon, PlusIcon, TrashIcon, EditIcon, RefreshCwIcon, SaveIcon, CreditCardIcon, WalletIcon, BriefcaseIcon, CoinsIcon, BadgeEuroIcon, HomeIcon, ShoppingBagIcon, CarIcon, UtensilsIcon, HeartIcon, GraduationCapIcon, SmileIcon, XIcon, PiggyBankIcon, TrendingUpIcon, AlertCircleIcon, CloudRainIcon, SunIcon, CloudIcon } from 'lucide-react';
 import { FinancialItem } from '../types/finance';
 import { toast, Toaster } from 'react-hot-toast';
 import { externalApiService } from '../services/ExternalAPIService';
@@ -127,10 +127,14 @@ const frequencies: FrequencyItem[] = [{
   id: 'once',
   name: 'Ponctuel'
 }];
+interface WeatherData {
+  condition: string;
+  temperature: number;
+}
+
 export function MappingScreen() {
   const navigate = useNavigate();
   const {
-    theme,
     themeColors
   } = useTheme();
   const {
@@ -144,10 +148,8 @@ export function MappingScreen() {
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [showAnimation, setShowAnimation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [weatherData, setWeatherData] = useState<any>(null);
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
-  const [exchangeRates, setExchangeRates] = useState<any>(null);
-  const [exchangeLoading, setExchangeLoading] = useState(false);
   // Initialize financial data with safe defaults
   const safeFinancialData = {
     incomes: financialData?.incomes || [],
@@ -161,7 +163,7 @@ export function MappingScreen() {
       setWeatherLoading(true);
       try {
         // Tenter de détecter la localisation de l'utilisateur via l'API de géolocalisation
-        navigator.geolocation.getCurrentPosition(async position => {
+        navigator.geolocation.getCurrentPosition(async () => {
           try {
             // Si on a la position, on peut obtenir la ville via reverse geocoding
             // Mais pour simplifier, on utilise Paris comme fallback
@@ -193,28 +195,6 @@ export function MappingScreen() {
       clearInterval(weatherInterval);
     };
   }, []);
-  // Récupérer les taux de change
-  useEffect(() => {
-    const fetchExchangeRates = async () => {
-      setExchangeLoading(true);
-      try {
-        const data = await externalApiService.getExchangeRates('EUR');
-        setExchangeRates(data);
-      } catch (error) {
-        console.error('Error fetching exchange rates:', error);
-      } finally {
-        setExchangeLoading(false);
-      }
-    };
-    fetchExchangeRates();
-  }, []);
-  // Convertir un montant dans une autre devise
-  const convertCurrency = (amount: number, targetCurrency: string) => {
-    if (!exchangeRates || !exchangeRates.rates) return amount;
-    const rate = exchangeRates.rates[targetCurrency];
-    if (!rate) return amount;
-    return (amount * rate).toFixed(2);
-  };
   // ✅ Helper function pour les noms d'affichage
   const getCategoryDisplayName = (tab: string) => {
     switch (tab) {
@@ -359,12 +339,12 @@ export function MappingScreen() {
       }
       setIsLoading(true);
       // Créer le nouvel élément avec un ID unique
-      const newItem = {
+      const newItem: FinancialItem = {
         id: `${activeTab}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         category: formData.category.trim(),
         value: parseFloat(formData.value.replace(',', '.')),
         description: formData.description.trim() || '',
-        frequency: formData.frequency as any,
+        frequency: formData.frequency as FinancialItem['frequency'],
         isRecurring: Boolean(formData.isRecurring),
         date: new Date().toISOString(),
         tags: []
@@ -421,9 +401,11 @@ export function MappingScreen() {
     }
   };
   // ✅ Fonction pour éditer un élément
-  const handleEditItem = (item: any) => {
+  const handleEditItem = (item: FinancialItem) => {
     console.log("✏️ Édition de l'élément:", item);
-    setIsEditing(item.id);
+    if (item.id) {
+      setIsEditing(item.id);
+    }
     setFormData({
       category: item.category || '',
       value: item.value?.toString() || '',
@@ -439,12 +421,12 @@ export function MappingScreen() {
     console.log("📝 Mise à jour de l'élément:", isEditing);
     try {
       setIsLoading(true);
-      const updatedItem = {
+      const updatedItem: FinancialItem = {
         id: isEditing,
         category: formData.category.trim(),
         value: parseFloat(formData.value.replace(',', '.')),
         description: formData.description.trim() || '',
-        frequency: formData.frequency as any,
+        frequency: formData.frequency as FinancialItem['frequency'],
         isRecurring: Boolean(formData.isRecurring),
         date: new Date().toISOString(),
         tags: []
@@ -464,16 +446,16 @@ export function MappingScreen() {
       // Mettre à jour dans la bonne catégorie
       switch (activeTab) {
         case 'income':
-          updatedData.incomes = updatedData.incomes.map((item: any) => item.id === isEditing ? updatedItem : item);
+          updatedData.incomes = updatedData.incomes.map((item: FinancialItem) => item.id === isEditing ? updatedItem : item);
           break;
         case 'expense':
-          updatedData.expenses = updatedData.expenses.map((item: any) => item.id === isEditing ? updatedItem : item);
+          updatedData.expenses = updatedData.expenses.map((item: FinancialItem) => item.id === isEditing ? updatedItem : item);
           break;
         case 'saving':
-          updatedData.savings = updatedData.savings.map((item: any) => item.id === isEditing ? updatedItem : item);
+          updatedData.savings = updatedData.savings.map((item: FinancialItem) => item.id === isEditing ? updatedItem : item);
           break;
         case 'debt':
-          updatedData.debts = updatedData.debts.map((item: any) => item.id === isEditing ? updatedItem : item);
+          updatedData.debts = updatedData.debts.map((item: FinancialItem) => item.id === isEditing ? updatedItem : item);
           break;
       }
       setFinancialData(updatedData);
@@ -501,16 +483,16 @@ export function MappingScreen() {
     if (!updatedData.debts) updatedData.debts = [];
     switch (activeTab) {
       case 'income':
-        updatedData.incomes = updatedData.incomes.filter((item: any) => item.id !== id);
+        updatedData.incomes = updatedData.incomes.filter((item: FinancialItem) => item.id !== id);
         break;
       case 'expense':
-        updatedData.expenses = updatedData.expenses.filter((item: any) => item.id !== id);
+        updatedData.expenses = updatedData.expenses.filter((item: FinancialItem) => item.id !== id);
         break;
       case 'saving':
-        updatedData.savings = updatedData.savings.filter((item: any) => item.id !== id);
+        updatedData.savings = updatedData.savings.filter((item: FinancialItem) => item.id !== id);
         break;
       case 'debt':
-        updatedData.debts = updatedData.debts.filter((item: any) => item.id !== id);
+        updatedData.debts = updatedData.debts.filter((item: FinancialItem) => item.id !== id);
         break;
     }
     setFinancialData(updatedData);
@@ -833,7 +815,7 @@ export function MappingScreen() {
                     <button onClick={() => handleEditItem(item)} className="p-1.5 hover:bg-black/20 rounded-full mr-1">
                       <EditIcon className="h-4 w-4 text-gray-400" />
                     </button>
-                    <button onClick={() => handleDeleteItem(item.id!)} className="p-1.5 hover:bg-black/20 rounded-full">
+                  <button onClick={() => item.id && handleDeleteItem(item.id)} className="p-1.5 hover:bg-black/20 rounded-full">
                       <TrashIcon className="h-4 w-4 text-gray-400" />
                     </button>
                   </div>

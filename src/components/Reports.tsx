@@ -1,23 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { GlassCard } from './ui/GlassCard';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
-import { FileBarChartIcon, DownloadIcon, ShareIcon, ClockIcon, CheckCircleIcon, CalendarIcon, BookIcon, PlusIcon } from 'lucide-react';
-import { FinancialReport } from '../types/finance';
+import { FileBarChartIcon, CheckCircleIcon, CalendarIcon, BookIcon } from 'lucide-react';
 import dayjs from 'dayjs';
 import 'dayjs/locale/fr';
 // Set locale
 dayjs.locale('fr');
+
+interface Report {
+  id: string;
+  title: string;
+  date: string;
+  summary: string;
+  recommendations: string[];
+}
+
 export function Reports() {
-  const navigate = useNavigate();
   const {
     themeColors
   } = useTheme();
-  const [reports, setReports] = useState([]);
-  const [selectedReport, setSelectedReport] = useState(null);
+  const [reports, setReports] = useState<Report[]>([]);
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   // Generate example reports on mount
   useEffect(() => {
     try {
