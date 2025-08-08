@@ -16,14 +16,22 @@ export function LoginScreen() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !password) {
+      toast.error('Veuillez remplir tous les champs.');
+      return;
+    }
     // In a real app, you would handle authentication here
-    const user = { id: '1', email, name: 'Test User' };
-    const token = 'fake-jwt-token';
-    login(user, token);
-    toast.success('Connexion réussie !');
-    setTimeout(() => {
-      navigate('/dashboard');
-    }, 1000);
+    try {
+      const user = { id: '1', email, name: 'Test User' };
+      const token = 'fake-jwt-token';
+      login(user, token);
+      toast.success('Connexion réussie !');
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1000);
+    } catch (error) {
+      toast.error('Email ou mot de passe incorrect.');
+    }
   };
 
   return (
@@ -39,8 +47,9 @@ export function LoginScreen() {
           <form onSubmit={handleLogin}>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm mb-1">Email</label>
+                <label htmlFor="email" className="block text-sm mb-1">Email</label>
                 <input
+                  id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -49,8 +58,10 @@ export function LoginScreen() {
                 />
               </div>
               <div>
-                <label className="block text-sm mb-1">Mot de passe</label>
+                <label htmlFor="password"
+                       className="block text-sm mb-1">Mot de passe</label>
                 <input
+                  id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
