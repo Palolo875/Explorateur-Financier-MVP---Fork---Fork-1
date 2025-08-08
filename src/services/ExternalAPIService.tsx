@@ -49,6 +49,8 @@ class ExternalAPIService {
   }
   // Ajout d'une durée de cache spécifique par type de données
   private cacheDurations: Map<string, number> = new Map();
+  private fmpApiKey = 'YOUR_FINANCIAL_MODELING_PREP_API_KEY';
+  private openWeatherMapApiKey = 'YOUR_OPENWEATHERMAP_API_KEY';
   // Configurer une durée de cache spécifique pour un type de données
   public setCacheDurationForType(type: string, durationInMs: number): void {
     this.cacheDurations.set(type, durationInMs);
@@ -88,20 +90,6 @@ class ExternalAPIService {
     });
   }
   // Nouvelle méthode pour gérer les appels API avec fallback
-  private async withFallback<T>(apiCall: () => Promise<T>, fallback: () => T, cacheKey: string): Promise<T> {
-    try {
-      const cachedData = this.getCache<T>(cacheKey);
-      if (cachedData) return cachedData;
-      const result = await apiCall();
-      this.setCache(cacheKey, result);
-      return result;
-    } catch (error) {
-      console.warn(`API call failed, using fallback: ${error}`);
-      const fallbackData = fallback();
-      this.setCache(cacheKey, fallbackData);
-      return fallbackData;
-    }
-  }
   // Méthode générique pour les appels API avec gestion d'erreur
   private async fetchWithErrorHandling<T>(url: string, options?: RequestInit, mockDataFn?: () => T): Promise<T> {
     try {
@@ -121,163 +109,152 @@ class ExternalAPIService {
   }
   // News API - Get news articles by keywords using Gnews (API gratuite avec limite)
   public async getNewsArticles(keywords: string, count = 5): Promise<NewsArticle[]> {
-    return this.withFallback(async () => {
-      // Utilisation de l'API Gnews (gratuite avec limite)
-      const apiKey = 'c01873f1471c862b7b787e3e82f9a561'; // Clé démo - à remplacer par la vôtre
-      const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(keywords)}&max=${count}&lang=fr&apikey=${apiKey}`;
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
+    const apiKey = 'c01873f1471c862b7b787e3e82f9a561'; // Clé démo - à remplacer par la vôtre
+    const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(keywords)}&max=${count}&lang=fr&apikey=${apiKey}`;
+    return this.fetchWithErrorHandling(url, {}, () => []).then(data => {
+      if (data && data.articles) {
+        return data.articles.map((article: any) => ({
+          title: article.title,
+          description: article.description,
+          url: article.url,
+          source: {
+            name: article.source?.name || 'Source inconnue'
+          },
+          publishedAt: article.publishedAt,
+          urlToImage: article.image
+        }));
       }
-      const data = await response.json();
-      // Transformer les données au format attendu
-      interface GNewsArticle {
-        title: string;
-        description: string;
-        url: string;
-        source: { name: string };
-        publishedAt: string;
-        image: string;
-      }
-      return data.articles?.map((article: GNewsArticle) => ({
-        title: article.title,
-        description: article.description,
-        url: article.url,
-        source: {
-          name: article.source?.name || 'Source inconnue'
-        },
-        publishedAt: article.publishedAt,
-        urlToImage: article.image
-      })) || [];
-    }, () => this.getMockNewsData(keywords, count), `news_${keywords}_${count}`);
+      return [];
+    });
   }
   // Autres méthodes avec la nouvelle approche
   public async getStockQuote(symbol: string): Promise<StockQuote | null> {
-    return this.withFallback(async () => {
-      // Alpha Vantage API (gratuite avec limite)
-      const apiKey = 'QGQZR6ZV2RSUWPQR'; // Clé démo - à remplacer par la vôtre
-      const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${apiKey}`;
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
+    const url = `https://financialmodelingprep.com/api/v3/quote/${symbol}?apikey=${this.fmpApiKey}`;
+    return this.fetchWithErrorHandling(url, {}, () => this.getMockStockQuote(symbol)).then(data => {
+      if (data && data.length > 0) {
+        const quote = data[0];
+        return {
+          symbol: quote.symbol,
+          price: quote.price.toFixed(2),
+          change: quote.change.toFixed(2),
+          changePercent: quote.changesPercentage.toFixed(2),
+        };
       }
-      const data = await response.json();
-      // Si l'API renvoie une erreur ou pas de données
-      if (!data || !data['Global Quote'] || Object.keys(data['Global Quote']).length === 0) {
-        throw new Error('No stock data available');
-      }
-      return {
-        symbol: data['Global Quote']['01. symbol'] || symbol,
-        price: data['Global Quote']['05. price'] || '0.00',
-        change: data['Global Quote']['09. change'] || '0.00',
-        changePercent: data['Global Quote']['10. change percent']?.replace('%', '') || '0.00'
-      };
-    }, () => this.getMockStockQuote(symbol), `stock_${symbol}`);
+      return null;
+    });
   }
-  // Mock data generators
-  private getMockNewsData(keywords: string, count: number): NewsArticle[] {
-    const mockArticles: NewsArticle[] = [{
-      title: `Dernières tendances en ${keywords}`,
-      description: `Découvrez les dernières tendances en matière de ${keywords} et comment elles peuvent affecter votre situation financière.`,
-      url: 'https://example.com/article1',
-      source: {
-        name: 'Finance Actualités'
-      },
-      publishedAt: new Date().toISOString()
-    }, {
-      title: `Comment optimiser votre ${keywords}`,
-      description: `Des experts partagent leurs conseils pour optimiser votre ${keywords} et maximiser votre rendement.`,
-      url: 'https://example.com/article2',
-      source: {
-        name: 'Économie Plus'
-      },
-      publishedAt: new Date().toISOString()
-    }
-    // ... autres articles mock
-    ];
-    return mockArticles.slice(0, count);
+
+  public async getQuote(): Promise<{ content: string; author: string } | null> {
+    return this.fetchWithErrorHandling('https://api.quotable.io/random?tags=finance', {}, () => ({
+      content: 'An investment in knowledge pays the best interest.',
+      author: 'Benjamin Franklin',
+    }));
   }
-  private getMockStockQuote(symbol: string): StockQuote {
-    // Generate random price and change values
-    const price = (Math.random() * 1000 + 50).toFixed(2);
-    const change = (Math.random() * 10 - 5).toFixed(2);
-    const changePercent = (parseFloat(change) / parseFloat(price) * 100).toFixed(2);
-    return {
-      symbol,
-      price,
-      change,
-      changePercent
-    };
+
+  public async getCryptoData(currency: string, count: number): Promise<any[]> {
+    const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=${count}&page=1&sparkline=false`;
+    return this.fetchWithErrorHandling(url, {}, () => []);
+  }
+
+  public async getActivitySuggestion(): Promise<{ activity: string } | null> {
+    return this.fetchWithErrorHandling('https://www.boredapi.com/api/activity?type=recreational', {}, () => ({
+      activity: 'Read a book',
+    }));
+  }
+
+  public async getExchangeRates(base: string): Promise<{ rates: Record<string, number> } | null> {
+    const url = `https://api.exchangerate.host/latest?base=${base}`;
+    return this.fetchWithErrorHandling(url, {}, () => ({ rates: { USD: 1.2, EUR: 1.0 } }));
   }
   public async getWeatherData(city: string, country = 'FR'): Promise<WeatherData> {
-    return this.withFallback(async () => {
-      // Mock implementation for now
-      return {
-        temperature: 20 + Math.random() * 10,
-        condition: 'Ensoleillé',
-        humidity: 50 + Math.random() * 30,
-        windSpeed: 5 + Math.random() * 20,
-        location: city,
-        icon: 'https://openweathermap.org/img/wn/01d@2x.png'
-      };
-    }, () => ({
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${city},${country}&appid=${this.openWeatherMapApiKey}&units=metric&lang=fr`;
+    return this.fetchWithErrorHandling(url, {}, () => ({
       temperature: 20,
       condition: 'Ensoleillé',
       humidity: 60,
       windSpeed: 10,
       location: city,
       icon: 'https://openweathermap.org/img/wn/01d@2x.png'
-    }), `weather_${city}_${country}`);
+    })).then(data => {
+      if (data && data.main) {
+        return {
+          temperature: data.main.temp,
+          condition: data.weather[0].description,
+          humidity: data.main.humidity,
+          windSpeed: data.wind.speed,
+          location: data.name,
+          icon: `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`,
+        };
+      }
+      return {
+        temperature: 20,
+        condition: 'Ensoleillé',
+        humidity: 60,
+        windSpeed: 10,
+        location: city,
+        icon: 'https://openweathermap.org/img/wn/01d@2x.png'
+      };
+    });
   }
   public async getMarketIndices(): Promise<MarketIndexData[]> {
-    return this.withFallback(async () => {
-      // Mock implementation for now
-      return [{
-        name: 'CAC 40',
-        value: 7200 + Math.random() * 100,
-        change: -15 + Math.random() * 30,
-        changePercent: -0.5 + Math.random()
-      }, {
-        name: 'S&P 500',
-        value: 4500 + Math.random() * 100,
-        change: -20 + Math.random() * 40,
-        changePercent: -0.4 + Math.random()
-      }];
-    }, () => [{
-      name: 'CAC 40',
-      value: 7250,
-      change: 10,
-      changePercent: 0.14
-    }, {
-      name: 'S&P 500',
-      value: 4550,
-      change: 15,
-      changePercent: 0.33
-    }], 'market_indices');
+    const url = `https://financialmodelingprep.com/api/v3/actives?apikey=${this.fmpApiKey}`;
+    return this.fetchWithErrorHandling(url, {}, () => []).then(data => {
+      if (data && data.length > 0) {
+        return data.slice(0, 5).map((index: any) => ({
+          name: index.ticker,
+          value: index.price,
+          change: index.changes,
+          changePercent: index.changesPercentage,
+        }));
+      }
+      return [];
+    });
   }
   public async getCentralBankRates(): Promise<Record<string, number>> {
-    return this.withFallback(async () => ({
+    const url = `https://financialmodelingprep.com/api/v4/central-bank-rates?apikey=${this.fmpApiKey}`;
+    return this.fetchWithErrorHandling(url, {}, () => ({
       BCE: 4.5,
       FED: 5.25,
-      BoE: 5.0
-    }), () => ({
-      BCE: 4.5,
-      FED: 5.25,
-      BoE: 5.0
-    }), 'central_bank_rates');
+      BoE: 5.0,
+    })).then(data => {
+      if (data && data.length > 0) {
+        const rates: Record<string, number> = {};
+        data.slice(0, 3).forEach((rate: any) => {
+          rates[rate.country] = rate.rate;
+        });
+        return rates;
+      }
+      return {
+        BCE: 4.5,
+        FED: 5.25,
+        BoE: 5.0,
+      };
+    });
   }
+
   public async getCountryEconomicData(country: string): Promise<CountryEconomicData> {
-    return this.withFallback(async () => ({
-      country,
-      gdp: 1.2 + Math.random(),
-      inflation: 2.5 + Math.random(),
-      unemployment: 7.0 + Math.random()
-    }), () => ({
+    const url = `https://financialmodelingprep.com/api/v4/economic-indicator/gdp?name=${country}&apikey=${this.fmpApiKey}`;
+    return this.fetchWithErrorHandling(url, {}, () => ({
       country,
       gdp: 1.5,
       inflation: 2.8,
-      unemployment: 7.2
-    }), `economic_data_${country}`);
+      unemployment: 7.2,
+    })).then(data => {
+      if (data && data.length > 0) {
+        return {
+          country,
+          gdp: data[0].gdp,
+          inflation: data[0].inflation,
+          unemployment: data[0].unemployment,
+        };
+      }
+      return {
+        country,
+        gdp: 1.5,
+        inflation: 2.8,
+        unemployment: 7.2,
+      };
+    });
   }
 }
 // Create singleton instance

@@ -8,6 +8,7 @@ interface FinanceState {
   financialData: FinancialData;
   emotionalContext: EmotionalContext;
   userSettings: UserSettings;
+  userCity: string;
   hasCompletedOnboarding: boolean;
   // History
   questionHistory: string[];
@@ -20,6 +21,7 @@ interface FinanceState {
   setFinancialData: (data: FinancialData) => void;
   setEmotionalContext: (context: Partial<EmotionalContext>) => void;
   setUserSettings: (settings: Partial<UserSettings>) => void;
+  setUserCity: (city: string) => void;
   addQuestionToHistory: (question: string) => void;
   saveFinancialSnapshot: () => void;
   completeOnboarding: () => void;
@@ -63,9 +65,11 @@ export const useFinanceStore = create<FinanceState>()(
       hasCompletedOnboarding: false,
       questionHistory: [],
       financialSnapshots: [],
+      userCity: 'Paris',
 
       // Actions
       setUserQuestion: question => set({ userQuestion: question }),
+      setUserCity: city => set({ userCity: city }),
       setFinancialData: data => set({ financialData: data }),
       setEmotionalContext: context =>
         set(() => ({
@@ -102,6 +106,7 @@ export const useFinanceStore = create<FinanceState>()(
         hasCompletedOnboarding: state.hasCompletedOnboarding,
         questionHistory: state.questionHistory,
         financialSnapshots: state.financialSnapshots,
+        userCity: state.userCity,
       }),
     }
   )

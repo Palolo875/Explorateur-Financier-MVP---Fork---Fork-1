@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { GlassCard } from './ui/GlassCard';
 import { useTheme } from '../context/ThemeContext';
+import { useFinance } from '../context/FinanceContext';
 import { FileBarChartIcon, CheckCircleIcon, CalendarIcon, BookIcon } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import dayjs from 'dayjs';
 import 'dayjs/locale/fr';
 // Set locale
@@ -19,6 +21,7 @@ export function Reports() {
   const {
     themeColors
   } = useTheme();
+  const { financialData } = useFinance();
   const [reports, setReports] = useState<Report[]>([]);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -51,9 +54,31 @@ export function Reports() {
       setIsLoading(false);
     }
   }, []);
-  const formatDate = dateString => {
+  const formatDate = (dateString: string) => {
     return dayjs(dateString).format('DD MMMM YYYY');
   };
+
+  const pieChartData = financialData.expenses.reduce((acc, expense) => {
+    const category = acc.find(item => item.name === expense.category);
+    if (category) {
+      category.value += typeof expense.value === 'number' ? expense.value : parseFloat(expense.value);
+    } else {
+      acc.push({
+        name: expense.category,
+        value: typeof expense.value === 'number' ? expense.value : parseFloat(expense.value),
+      });
+    }
+    return acc;
+  }, [] as { name: string; value: number }[]);
+
+  const barChartData = [
+    {
+      name: 'Revenus vs Dépenses',
+      revenus: financialData.incomes.reduce((sum, item) => sum + (typeof item.value === 'number' ? item.value : parseFloat(item.value)), 0),
+      dépenses: financialData.expenses.reduce((sum, item) => sum + (typeof item.value === 'number' ? item.value : parseFloat(item.value)), 0),
+    },
+  ];
+
   return <div className="w-full max-w-6xl mx-auto pb-20">
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
@@ -122,6 +147,7 @@ export function Reports() {
                       {formatDate(selectedReport.date)}
                     </div>
                   </div>
+                  <button onClick={() => window.print()} className="px-4 py-2 bg-black/20 hover:bg-black/30 rounded-lg text-sm">Imprimer</button>
                 </div>
                 <div className="bg-black/20 p-4 rounded-xl mb-6">
                   <h3 className="font-medium mb-2 flex items-center">
@@ -129,6 +155,43 @@ export function Reports() {
                     Résumé
                   </h3>
                   <p className="text-gray-300">{selectedReport.summary}</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div>
+                    <h3 className="font-medium mb-3 flex items-center">
+                      <PieChart className="h-5 w-5 mr-2 text-purple-400" />
+                      Répartition des dépenses
+                    </h3>
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={pieChartData} cx="50%" cy="50%" labelLine={false} outerRadius={80} fill="#8884d8" dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                            {pieChartData.map((entry, index) => <Cell key={`cell-${index}`} fill={themeColors.chartColors[index % themeColors.chartColors.length]} />)}
+                          </Pie>
+                          <Tooltip formatter={(value) => [`${value.toLocaleString('fr-FR')}€`, 'Montant']} contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px' }} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-medium mb-3 flex items-center">
+                      <BarChart className="h-5 w-5 mr-2 text-blue-400" />
+                      Revenus vs Dépenses
+                    </h3>
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={barChartData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                          <XAxis dataKey="name" stroke="#aaa" />
+                          <YAxis stroke="#aaa" />
+                          <Tooltip formatter={(value) => [`${value.toLocaleString('fr-FR')}€`, '']} contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px' }} />
+                          <Legend />
+                          <Bar dataKey="revenus" fill={themeColors.chartColors[1]} />
+                          <Bar dataKey="dépenses" fill={themeColors.chartColors[0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
                 </div>
                 <h3 className="font-medium mb-3 flex items-center">
                   <CheckCircleIcon className="h-5 w-5 mr-2 text-green-400" />

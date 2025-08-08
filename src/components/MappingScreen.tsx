@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useFinance } from '../context/FinanceContext';
+import { useFinanceStore } from '../stores/financeStore';
 import { GlassCard } from './ui/GlassCard';
 import { RevealAnimation } from './ui/RevealAnimation';
 import { ArrowLeftIcon, ArrowRightIcon, PlusIcon, TrashIcon, EditIcon, RefreshCwIcon, SaveIcon, CreditCardIcon, WalletIcon, BriefcaseIcon, CoinsIcon, BadgeEuroIcon, HomeIcon, ShoppingBagIcon, CarIcon, UtensilsIcon, HeartIcon, GraduationCapIcon, SmileIcon, XIcon, PiggyBankIcon, TrendingUpIcon, AlertCircleIcon, CloudRainIcon, SunIcon, CloudIcon } from 'lucide-react';
@@ -143,6 +144,7 @@ export function MappingScreen() {
     userQuestion,
     emotionalContext
   } = useFinance();
+  const { userCity } = useFinanceStore();
   const [activeTab, setActiveTab] = useState<CategoryType>('income');
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState<string | null>(null);
@@ -157,44 +159,27 @@ export function MappingScreen() {
     savings: financialData?.savings || [],
     debts: financialData?.debts || []
   };
-  // Récupérer les données météo - Amélioration avec gestion d'erreur et location dynamique
+  // Récupérer les données météo
   useEffect(() => {
     const fetchWeather = async () => {
-      setWeatherLoading(true);
-      try {
-        // Tenter de détecter la localisation de l'utilisateur via l'API de géolocalisation
-        navigator.geolocation.getCurrentPosition(async () => {
-          try {
-            // Si on a la position, on peut obtenir la ville via reverse geocoding
-            // Mais pour simplifier, on utilise Paris comme fallback
-            const data = await externalApiService.getWeatherData('Paris');
-            console.log('Weather data fetched:', data);
-            setWeatherData(data);
-          } catch (error) {
-            console.error('Error fetching weather with geolocation:', error);
-            // Fallback to Paris
-            const data = await externalApiService.getWeatherData('Paris');
-            setWeatherData(data);
-          }
-        }, async error => {
-          // En cas d'erreur ou de refus de géolocalisation
-          console.warn('Geolocation error or denied:', error);
-          const data = await externalApiService.getWeatherData('Paris');
+      if (userCity) {
+        setWeatherLoading(true);
+        try {
+          const data = await externalApiService.getWeatherData(userCity);
           setWeatherData(data);
-        });
-      } catch (error) {
-        console.error('Error in weather fetch process:', error);
-      } finally {
-        setWeatherLoading(false);
+        } catch (error) {
+          console.error('Error fetching weather data:', error);
+        } finally {
+          setWeatherLoading(false);
+        }
       }
     };
     fetchWeather();
-    // Rafraîchir les données météo toutes les 15 minutes
     const weatherInterval = setInterval(fetchWeather, 15 * 60 * 1000);
     return () => {
       clearInterval(weatherInterval);
     };
-  }, []);
+  }, [userCity]);
   // ✅ Helper function pour les noms d'affichage
   const getCategoryDisplayName = (tab: string) => {
     switch (tab) {
