@@ -5,11 +5,10 @@ import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useFinance } from '../context/FinanceContext';
 import { useFinanceStore } from '../stores/financeStore';
-import { LayoutDashboardIcon, TrendingUpIcon, TrendingDownIcon, PiggyBankIcon, BarChart3Icon, AlertCircleIcon, CalendarIcon, SearchIcon, RefreshCwIcon, ArrowRightIcon, LineChartIcon, CreditCardIcon, UserIcon, SettingsIcon, PlusIcon, ChevronRightIcon, InfoIcon, BellIcon, DownloadIcon, ClockIcon, CheckCircleIcon, XCircleIcon, CircleDollarSignIcon, TargetIcon, BriefcaseIcon, HeartIcon, BellRingIcon, NewspaperIcon, QuoteIcon } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, RadialBarChart, RadialBar, AreaChart, Area } from 'recharts';
-import { format, subMonths, parseISO } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { FinancialInsight } from '../types/finance';
+import { TrendingUpIcon, TrendingDownIcon, PiggyBankIcon, BarChart3Icon, AlertCircleIcon, CalendarIcon, SearchIcon, RefreshCwIcon, ArrowRightIcon, LineChartIcon, SettingsIcon, PlusIcon, ChevronRightIcon, InfoIcon, BellIcon, ClockIcon, CheckCircleIcon, XCircleIcon, TargetIcon, BriefcaseIcon, HeartIcon, NewspaperIcon, QuoteIcon } from 'lucide-react';
+import { XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, RadialBarChart, RadialBar, AreaChart, Area } from 'recharts';
+import { format } from 'date-fns';
+import { FinancialInsight, Prediction, HiddenFee, NewsArticle, InspirationalQuote, StockMarketData, CryptoData, HistoricalData } from '../types/finance';
 import { toast, Toaster } from 'react-hot-toast';
 import CountUp from 'react-countup';
 import { Link } from 'react-router-dom';
@@ -28,7 +27,6 @@ interface DashboardNotification {
 export function Dashboard() {
   const navigate = useNavigate();
   const {
-    theme,
     themeColors
   } = useTheme();
   const {
@@ -37,38 +35,34 @@ export function Dashboard() {
     calculateTotalExpenses,
     calculateNetWorth,
     generateInsights,
-    runSimulation,
     getFinancialHealth,
     detectHiddenFees,
     getHistoricalData,
     getPredictions,
-    getFinancialScore,
     refreshData
   } = useFinance();
   const {
     questionHistory,
-    financialSnapshots,
-    setHasCompletedOnboarding
   } = useFinanceStore();
   // State variables
   const [timeframe, setTimeframe] = useState('month');
   const [isLoading, setIsLoading] = useState(true);
   const [insights, setInsights] = useState<FinancialInsight[]>([]);
   const [healthScore, setHealthScore] = useState<number>(0);
-  const [predictions, setPredictions] = useState<any>(null);
-  const [hiddenFees, setHiddenFees] = useState<any>(null);
-  const [historicalData, setHistoricalData] = useState<any[]>([]);
+  const [, setPredictions] = useState<Prediction | null>(null);
+  const [hiddenFees, setHiddenFees] = useState<HiddenFee | null>(null);
+  const [historicalData, setHistoricalData] = useState<HistoricalData[]>([]);
   const [notifications, setNotifications] = useState<DashboardNotification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [latestNews, setLatestNews] = useState<any[]>([]);
-  const [inspirationalQuote, setInspirationalQuote] = useState<any>(null);
-  const [stockMarketData, setStockMarketData] = useState<any>(null);
-  const [cryptoData, setCryptoData] = useState<any[]>([]);
+  const [latestNews, setLatestNews] = useState<NewsArticle[]>([]);
+  const [inspirationalQuote, setInspirationalQuote] = useState<InspirationalQuote | null>(null);
+  const [stockMarketData, setStockMarketData] = useState<StockMarketData | null>(null);
+  const [cryptoData, setCryptoData] = useState<CryptoData[]>([]);
   // Ajouter de nouveaux états pour les nouvelles données
-  const [userCity, setUserCity] = useState('Paris');
+  const [userCity] = useState('Paris');
   const [selectedCountry, setSelectedCountry] = useState('France');
   // Utiliser les nouveaux hooks
   const {
@@ -95,27 +89,6 @@ export function Dashboard() {
   const savingsRate = totalIncome > 0 ? (totalIncome - totalExpenses) / totalIncome * 100 : 0;
   // Generate mock historical data if not available
   useEffect(() => {
-    const generateMockHistoricalData = () => {
-      const today = new Date();
-      const data = [];
-      for (let i = 5; i >= 0; i--) {
-        const date = subMonths(today, i);
-        const monthName = format(date, 'MMM', {
-          locale: fr
-        });
-        const variationIncome = 1 + (Math.random() * 0.2 - 0.1); // -10% to +10%
-        const variationExpenses = 1 + (Math.random() * 0.2 - 0.1); // -10% to +10%
-        data.push({
-          month: monthName,
-          income: Math.round(totalIncome * variationIncome),
-          expenses: Math.round(totalExpenses * variationExpenses),
-          balance: Math.round(totalIncome * variationIncome - totalExpenses * variationExpenses),
-          savings: Math.round((totalIncome * variationIncome - totalExpenses * variationExpenses) * 0.7),
-          investments: Math.round((totalIncome * variationIncome - totalExpenses * variationExpenses) * 0.3)
-        });
-      }
-      return data;
-    };
     // Initialize data
     const fetchData = async () => {
       setIsLoading(true);
@@ -162,7 +135,7 @@ export function Dashboard() {
       }
     };
     fetchData();
-  }, []);
+  }, [detectHiddenFees, generateInsights, getFinancialHealth, getHistoricalData, getPredictions]);
   // Load external data
   useEffect(() => {
     const loadExternalData = async () => {
@@ -384,17 +357,17 @@ export function Dashboard() {
     return <div className="bg-black/20 p-4 rounded-lg">
         <h3 className="font-medium mb-3">Indices boursiers</h3>
         <div className="space-y-2">
-          {marketIndices.map((index, i) => <div key={i} className="flex justify-between items-center">
-              <span>{index.name}</span>
+          {marketIndices.map((item, i) => <div key={i} className="flex justify-between items-center">
+              <span>{item.name}</span>
               <div className="flex items-center">
                 <span className="font-medium mr-2">
-                  {index.value.toLocaleString('fr-FR', {
+                  {item.value.toLocaleString('fr-FR', {
                 maximumFractionDigits: 2
               })}
                 </span>
-                <span className={`text-xs ${index.changePercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {index.changePercent >= 0 ? '+' : ''}
-                  {index.changePercent.toFixed(2)}%
+                <span className={`text-xs ${item.changePercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {item.changePercent >= 0 ? '+' : ''}
+                  {item.changePercent.toFixed(2)}%
                 </span>
               </div>
             </div>)}
@@ -412,7 +385,7 @@ export function Dashboard() {
     return <div className="bg-black/20 p-4 rounded-lg">
         <h3 className="font-medium mb-3">Taux directeurs</h3>
         <div className="space-y-2">
-          {Object.entries(centralBankRates || {}).map(([bank, rate], i) => <div key={i} className="flex justify-between items-center">
+          {Object.entries(centralBankRates || {}).map(([bank, rate]) => <div key={bank} className="flex justify-between items-center">
               <span>{bank}</span>
               <span className="font-medium">{rate}%</span>
             </div>)}
@@ -500,7 +473,7 @@ export function Dashboard() {
                       </button>}
                   </div>
                   <div className="max-h-80 overflow-y-auto">
-                    {notifications.length > 0 ? notifications.map(notification => <div key={notification.id} className={`p-3 border-b border-white/5 hover:bg-white/5 cursor-pointer ${!notification.read ? 'bg-indigo-900/10' : ''}`} onClick={() => markAsRead(notification.id)}>
+                    {notifications.length > 0 ? notifications.map((notification, i) => <div key={i} className={`p-3 border-b border-white/5 hover:bg-white/5 cursor-pointer ${!notification.read ? 'bg-indigo-900/10' : ''}`} onClick={() => markAsRead(notification.id)}>
                           <div className="flex items-start">
                             <div className={`mt-1 mr-3 p-1.5 rounded-full 
                               ${notification.type === 'info' ? 'bg-blue-500/20 text-blue-400' : notification.type === 'success' ? 'bg-green-500/20 text-green-400' : notification.type === 'warning' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'}`}>
@@ -734,7 +707,7 @@ export function Dashboard() {
                 name,
                 percent
               }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                    {pieChartData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                    {pieChartData.map((entry, i) => <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />)}
                   </Pie>
                   <Tooltip formatter={value => [`${value.toLocaleString('fr-FR')}€`, 'Montant']} contentStyle={{
                 backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -758,9 +731,9 @@ export function Dashboard() {
                 Top 3 des dépenses
               </h4>
               <div className="space-y-2">
-                {pieChartData.sort((a, b) => b.value - a.value).slice(0, 3).map((item, index) => <div key={index} className="flex items-center">
+                {pieChartData.sort((a, b) => b.value - a.value).slice(0, 3).map((item, i) => <div key={i} className="flex items-center">
                       <div className="w-3 h-3 rounded-full mr-2" style={{
-                backgroundColor: COLORS[index % COLORS.length]
+                backgroundColor: COLORS[i % COLORS.length]
               }}></div>
                       <div className="text-sm">{item.name}</div>
                       <div className="ml-auto text-sm font-medium">
@@ -868,7 +841,7 @@ export function Dashboard() {
           {isLoading ? <div className="h-64 flex items-center justify-center">
               <div className="animate-spin h-8 w-8 border-4 border-indigo-500 border-t-transparent rounded-full"></div>
             </div> : <div className="space-y-3 max-h-64 overflow-y-auto">
-              {insights.length > 0 ? insights.map((insight, index) => <div key={insight.id} className={`p-3 rounded-lg ${insight.impact === 'high' ? 'bg-red-900/20 border border-red-500/30' : insight.impact === 'medium' ? 'bg-yellow-900/20 border border-yellow-500/30' : 'bg-green-900/20 border border-green-500/30'}`}>
+                {insights.length > 0 ? insights.map((insight) => <div key={insight.id} className={`p-3 rounded-lg ${insight.impact === 'high' ? 'bg-red-900/20 border border-red-500/30' : insight.impact === 'medium' ? 'bg-yellow-900/20 border border-yellow-500/30' : 'bg-green-900/20 border border-green-500/30'}`}>
                     <div className="flex items-center mb-1">
                       <span className={`w-2 h-2 rounded-full mr-2 ${insight.impact === 'high' ? 'bg-red-500' : insight.impact === 'medium' ? 'bg-yellow-500' : 'bg-green-500'}`}></span>
                       <h4 className="text-sm font-medium">{insight.title}</h4>
@@ -1036,7 +1009,7 @@ export function Dashboard() {
             </div>
           </div>
           <div className="space-y-3 max-h-64 overflow-y-auto">
-            {latestNews.length > 0 ? latestNews.map((article, index) => <div key={index} className="bg-black/20 p-3 rounded-lg">
+            {latestNews.length > 0 ? latestNews.map((article, i) => <div key={i} className="bg-black/20 p-3 rounded-lg">
                   <h4 className="text-sm font-medium mb-1">{article.title}</h4>
                   <p className="text-xs text-gray-300 line-clamp-2">
                     {article.description}
@@ -1093,7 +1066,7 @@ export function Dashboard() {
             {cryptoData.length > 0 && <div className="bg-black/20 p-3 rounded-lg">
                 <h4 className="text-sm mb-2">Crypto-monnaies</h4>
                 <div className="space-y-2">
-                  {cryptoData.map((crypto, index) => <div key={index} className="flex items-center justify-between">
+                  {cryptoData.map((crypto, i) => <div key={i} className="flex items-center justify-between">
                       <div className="flex items-center">
                         <img src={crypto.image} alt={crypto.name} className="h-5 w-5 mr-2 rounded-full" />
                         <span className="text-sm">{crypto.name}</span>

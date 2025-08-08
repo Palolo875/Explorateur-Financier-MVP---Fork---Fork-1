@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { GlassCard } from './ui/GlassCard';
-import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useFinance } from '../context/FinanceContext';
-import { PiggyBankIcon, TrendingUpIcon, TrendingDownIcon, PlusIcon, MinusIcon, SaveIcon, BarChart3Icon, CalendarIcon, AlertCircleIcon, CheckIcon, XIcon, RefreshCwIcon, CreditCardIcon, HomeIcon, ShoppingBagIcon, CarIcon, UtensilsIcon, BriefcaseIcon, HeartIcon, SmileIcon } from 'lucide-react';
+import { PiggyBankIcon, TrendingDownIcon, PlusIcon, MinusIcon, SaveIcon, BarChart3Icon, CalendarIcon, AlertCircleIcon, CheckIcon, XIcon, RefreshCwIcon, HomeIcon, ShoppingBagIcon, CarIcon, UtensilsIcon, HeartIcon, SmileIcon } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 // Types pour le budget
@@ -21,19 +20,15 @@ interface BudgetPeriod {
   name: string;
 }
 export function BudgetPlanner() {
-  const navigate = useNavigate();
   const {
-    theme,
     themeColors
   } = useTheme();
   const {
     financialData,
-    calculateTotalIncome,
-    calculateTotalExpenses
   } = useFinance();
   // État du budget
   const [selectedPeriod, setSelectedPeriod] = useState<string>('current');
-  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [, setIsEditing] = useState<boolean>(false);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [newPlannedAmount, setNewPlannedAmount] = useState<string>('');
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -49,10 +44,6 @@ export function BudgetPlanner() {
     id: 'next',
     name: 'Mois prochain'
   }];
-  // Données financières calculées
-  const totalIncome = calculateTotalIncome() || 0;
-  const totalExpenses = calculateTotalExpenses() || 0;
-  const balance = totalIncome - totalExpenses;
   // Initialiser les catégories de budget
   useEffect(() => {
     // Générer des catégories de budget basées sur les dépenses existantes

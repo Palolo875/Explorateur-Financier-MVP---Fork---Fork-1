@@ -3,10 +3,9 @@ import { GlassCard } from './ui/GlassCard';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
-import { useFinance } from '../context/FinanceContext';
 import { BellIcon, BellRingIcon, CheckIcon, TrashIcon, AlertCircleIcon, InfoIcon, CheckCircleIcon, XCircleIcon, SettingsIcon, FilterIcon, ArrowUpIcon, ArrowDownIcon, ClockIcon, BellOffIcon } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
-import { format, formatDistanceToNow, parseISO } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 // Types pour les notifications
 interface Notification {
@@ -34,12 +33,8 @@ interface NotificationPreference {
 export function NotificationCenter() {
   const navigate = useNavigate();
   const {
-    theme,
     themeColors
   } = useTheme();
-  const {
-    financialData
-  } = useFinance();
   // États
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<string>('all');

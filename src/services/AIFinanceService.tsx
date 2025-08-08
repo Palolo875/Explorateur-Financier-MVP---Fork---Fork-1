@@ -1,19 +1,18 @@
-import React from 'react';
-import { FinancialItem, FinancialInsight, SimulationParams, SimulationResult } from '../types/finance';
+import { FinancialItem, FinancialInsight, SimulationParams, SimulationResult, FinancialData } from '../types/finance';
 // Modèle de scoring IA pour l'analyse financière
 interface AIModelParams {
-  financialData: any;
-  emotionalContext?: any;
-  marketConditions?: any;
+  financialData: Partial<FinancialData>;
+  emotionalContext?: { mood?: number };
+  marketConditions?: Record<string, unknown>;
 }
 export class AIFinanceService {
   private static instance: AIFinanceService;
-  private isInitialized: boolean = false;
-  private modelLoaded: boolean = false;
+  private isInitialized = false;
+  private modelLoaded = false;
   private lastUpdate: Date = new Date();
   private cacheTimeout: number = 30 * 60 * 1000; // 30 minutes par défaut
   private cache: Map<string, {
-    data: any;
+    data: unknown;
     timestamp: number;
   }> = new Map();
   // Singleton pattern
@@ -35,7 +34,7 @@ export class AIFinanceService {
     }
     return null;
   }
-  private setCache(key: string, data: any): void {
+  private setCache(key: string, data: unknown): void {
     this.cache.set(key, {
       data,
       timestamp: Date.now()
@@ -151,7 +150,7 @@ export class AIFinanceService {
     return result;
   }
   // Générer des insights financiers personnalisés
-  public async generateInsights(financialData: any): Promise<FinancialInsight[]> {
+  public async generateInsights(financialData: Partial<FinancialData>): Promise<FinancialInsight[]> {
     if (!this.isInitialized) await this.initialize();
     const cacheKey = `insights_${JSON.stringify(financialData)}`;
     const cachedInsights = this.getCache<FinancialInsight[]>(cacheKey);
@@ -327,7 +326,7 @@ export class AIFinanceService {
     return result;
   }
   // Détecter les frais cachés et optimisations potentielles
-  public async detectHiddenFees(financialData: any): Promise<{
+  public async detectHiddenFees(financialData: Partial<FinancialData>): Promise<{
     totalAmount: number;
     items: Array<{
       category: string;

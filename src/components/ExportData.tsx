@@ -1,16 +1,32 @@
-import React, { useState, createElement } from 'react';
+import React, { useState } from 'react';
 import { GlassCard } from './ui/GlassCard';
-import { useNavigate } from 'react-router-dom';
+import { FinancialItem } from '../types/finance';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useFinance } from '../context/FinanceContext';
-import { DownloadIcon, FileIcon, FileSpreadsheetIcon, FileJsonIcon, CheckIcon, ClockIcon, AlertCircleIcon } from 'lucide-react';
+import { DownloadIcon, FileSpreadsheetIcon, FileJsonIcon, CheckIcon, ClockIcon, AlertCircleIcon } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 type ExportFormat = 'csv' | 'pdf' | 'json' | 'excel';
+
+interface ExportData {
+  summary: {
+    totalIncome: number;
+    totalExpenses: number;
+    balance: number;
+    netWorth: number;
+    exportDate: string;
+  };
+  data: {
+    incomes: FinancialItem[];
+    expenses: FinancialItem[];
+    savings: FinancialItem[];
+    debts: FinancialItem[];
+  };
+  historical: Record<string, unknown> | null;
+}
+
 export function ExportData() {
-  const navigate = useNavigate();
   const {
-    theme,
     themeColors
   } = useTheme();
   const {
@@ -97,15 +113,15 @@ export function ExportData() {
     URL.revokeObjectURL(a.href);
   };
   // Fonction pour convertir en CSV
-  const convertToCSV = (data: any): string => {
+  const convertToCSV = (data: ExportData): string => {
     // Conversion simplifiée pour la démonstration
     let csv = 'Catégorie,Montant\n';
     // Ajouter les revenus
-    data.data.incomes.forEach((income: any) => {
+    data.data.incomes.forEach((income: FinancialItem) => {
       csv += `Revenu - ${income.category},${income.value}\n`;
     });
     // Ajouter les dépenses
-    data.data.expenses.forEach((expense: any) => {
+    data.data.expenses.forEach((expense: FinancialItem) => {
       csv += `Dépense - ${expense.category},${expense.value}\n`;
     });
     return csv;

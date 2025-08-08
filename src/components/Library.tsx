@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { GlassCard } from './ui/GlassCard';
-import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
-import { SearchIcon, BookOpenIcon, DownloadIcon, ClockIcon, StarIcon, FilterIcon, ChevronRightIcon, FileTextIcon, BookIcon, NewspaperIcon, FileIcon, ExternalLinkIcon, BarChartIcon, TrendingUpIcon, GlobeIcon, CreditCardIcon, HomeIcon, PiggyBankIcon, ShieldIcon } from 'lucide-react';
+import { SearchIcon, BookOpenIcon, StarIcon, FileTextIcon, BookIcon, NewspaperIcon, FileIcon, ExternalLinkIcon, BarChartIcon, TrendingUpIcon, GlobeIcon, CreditCardIcon, HomeIcon, PiggyBankIcon, ShieldIcon } from 'lucide-react';
 interface Resource {
   id: string;
   title: string;
@@ -19,7 +18,6 @@ interface Resource {
   rating: number; // 1-5
 }
 export function Library() {
-  const navigate = useNavigate();
   const {
     themeColors
   } = useTheme();

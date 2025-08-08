@@ -1,5 +1,4 @@
 import { FinancialData, EmotionalContext, FinancialInsight, SimulationParams, SimulationResult } from '../types/finance';
-import dayjs from 'dayjs';
 // Generate personalized financial insights based on user data
 export function calculateFinancialInsights(financialData: FinancialData, emotionalContext: EmotionalContext, totalIncome: number, totalExpenses: number): FinancialInsight[] {
   const insights: FinancialInsight[] = [];
@@ -120,9 +119,6 @@ export function calculateFinancialInsights(financialData: FinancialData, emotion
 }
 // Run financial simulation based on user data and parameters
 export function runFinancialSimulation(financialData: FinancialData, params: SimulationParams): SimulationResult {
-  const years = Array.from({
-    length: params.years
-  }, (_, i) => i + 1);
   const income = financialData.incomes.reduce((sum, item) => sum + (typeof item.value === 'string' ? parseFloat(item.value) || 0 : item.value), 0) * 12; // Annual income
   const expenses = financialData.expenses.reduce((sum, item) => sum + (typeof item.value === 'string' ? parseFloat(item.value) || 0 : item.value), 0) * 12; // Annual expenses
   const initialSavings = (financialData.savings || []).reduce((sum, item) => sum + (typeof item.value === 'string' ? parseFloat(item.value) || 0 : item.value), 0);
@@ -183,7 +179,7 @@ export function formatCurrency(amount: number, currency = 'EUR') {
   }).format(amount);
 }
 // Calculate compound interest
-export function calculateCompoundInterest(principal: number, rate: number, years: number, contributions: number = 0, frequency: 'monthly' | 'yearly' = 'monthly') {
+export function calculateCompoundInterest(principal: number, rate: number, years: number, contributions = 0, frequency: 'monthly' | 'yearly' = 'monthly') {
   const periodicRate = rate / 100 / (frequency === 'monthly' ? 12 : 1);
   const periods = years * (frequency === 'monthly' ? 12 : 1);
   let balance = principal;

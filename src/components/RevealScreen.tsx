@@ -1,20 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { GlassCard } from './ui/GlassCard';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useFinance } from '../context/FinanceContext';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, XIcon, AlertCircleIcon, TrendingUpIcon, TrendingDownIcon, BarChart3Icon, PiggyBankIcon, CreditCardIcon, LineChartIcon, CircleDollarSignIcon, SparklesIcon } from 'lucide-react';
+import { useFinanceStore } from '../stores/financeStore';
+import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, AlertCircleIcon, TrendingUpIcon, TrendingDownIcon, BarChart3Icon, PiggyBankIcon, CreditCardIcon, LineChartIcon, CircleDollarSignIcon, SparklesIcon } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
-import { FinancialInsight } from '../types/finance';
+import { FinancialInsight, CryptoData, StockMarketData } from '../types/finance';
 import { externalApiService } from '../services/ExternalAPIService';
 import { useWeatherData, useMarketIndices } from '../services/ExternalAPIService';
 export function RevealScreen() {
   const navigate = useNavigate();
   const {
-    theme,
     themeColors
   } = useTheme();
   const {
@@ -22,20 +20,53 @@ export function RevealScreen() {
     financialData,
     generateInsights
   } = useFinance();
+  const { userCity } = useFinanceStore();
   // States
   const [isLoading, setIsLoading] = useState(true);
   const [insights, setInsights] = useState<FinancialInsight[]>([]);
   const [activeTab, setActiveTab] = useState<'insights' | 'whatif' | 'recommendations'>('insights');
   const [error, setError] = useState<string | null>(null);
   // API data states
-  const [cryptoLoading, setCryptoLoading] = useState(false);
-  const [cryptoData, setCryptoData] = useState<any[]>([]);
+  const [cryptoData, setCryptoData] = useState<CryptoData[]>([]);
   const [activitySuggestion, setActivitySuggestion] = useState<string | null>(null);
-  const [stockData, setStockData] = useState<any | null>(null);
+  const [stockData, setStockData] = useState<StockMarketData | null>(null);
   // Financial calculations
   const totalIncome = financialData?.incomes?.reduce((sum, item) => sum + (typeof item.value === 'number' ? item.value : parseFloat(item.value) || 0), 0) || 0;
   const totalExpenses = financialData?.expenses?.reduce((sum, item) => sum + (typeof item.value === 'number' ? item.value : parseFloat(item.value) || 0), 0) || 0;
   const balance = totalIncome - totalExpenses;
+  // Fetch crypto data
+  const fetchCryptoData = useCallback(async () => {
+    try {
+      const apiService = externalApiService;
+      const data = await apiService.getCryptoData('eur', 3);
+      setCryptoData(data || []);
+    } catch (error) {
+      console.error('Error fetching crypto data:', error);
+    }
+  }, []);
+  // Fetch activity suggestion
+  const fetchActivity = useCallback(async () => {
+    try {
+      const apiService = externalApiService;
+      const activity = await apiService.getActivitySuggestion();
+      if (activity) {
+        setActivitySuggestion(activity.activity);
+      }
+    } catch (error) {
+      console.error('Error fetching activity:', error);
+    }
+  }, []);
+  // Fetch stock market data
+  const fetchStockData = useCallback(async () => {
+    try {
+      const apiService = externalApiService;
+      const data = await apiService.getStockQuote('MSFT');
+      setStockData(data);
+    } catch (error) {
+      console.error('Error fetching stock data:', error);
+    }
+  }, []);
+
   // Load insights and API data
   useEffect(() => {
     const loadData = async () => {
@@ -60,49 +91,14 @@ export function RevealScreen() {
       }
     };
     loadData();
-  }, []);
+  }, [generateInsights, fetchCryptoData, fetchActivity, fetchStockData]);
   // Utiliser les nouveaux hooks
   const {
     data: weatherData
-  } = useWeatherData('Paris');
+  } = useWeatherData(userCity);
   const {
     data: marketIndices
   } = useMarketIndices();
-  // Fetch crypto data
-  const fetchCryptoData = async () => {
-    setCryptoLoading(true);
-    try {
-      const apiService = externalApiService;
-      const data = await apiService.getCryptoData('eur', 3);
-      setCryptoData(data || []);
-    } catch (error) {
-      console.error('Error fetching crypto data:', error);
-    } finally {
-      setCryptoLoading(false);
-    }
-  };
-  // Fetch activity suggestion
-  const fetchActivity = async () => {
-    try {
-      const apiService = externalApiService;
-      const activity = await apiService.getActivitySuggestion();
-      if (activity) {
-        setActivitySuggestion(activity.activity);
-      }
-    } catch (error) {
-      console.error('Error fetching activity:', error);
-    }
-  };
-  // Fetch stock market data
-  const fetchStockData = async () => {
-    try {
-      const apiService = externalApiService;
-      const data = await apiService.getStockQuote('MSFT');
-      setStockData(data);
-    } catch (error) {
-      console.error('Error fetching stock data:', error);
-    }
-  };
   // Calculate crypto equivalent of an expense
   const calculateCryptoEquivalent = (amount: number) => {
     if (cryptoData.length > 0 && cryptoData[0].current_price) {
@@ -240,10 +236,10 @@ export function RevealScreen() {
             Insights financiers
           </div>
         </button>
-        <button className={`pb-2 px-4 ${activeTab === 'whatif' ? `border-b-2 border-indigo-500 text-indigo-400 font-medium` : 'text-gray-400 hover:text-gray-200'}`} onClick={() => setActiveTab('whatif')}>
+        <button className={`pb-2 px-4 ${activeTab === 'whatif' ? `border-b-2 border-indigo-500 text-indigo-400 font-medium` : 'text-gray-400 hover:text-gray-200'}`} onClick={() => navigate('/simulation')}>
           <div className="flex items-center whitespace-nowrap">
             <LineChartIcon className="mr-1.5 h-4 w-4" />
-            Et si...?
+            Simulations
           </div>
         </button>
         <button className={`pb-2 px-4 ${activeTab === 'recommendations' ? `border-b-2 border-indigo-500 text-indigo-400 font-medium` : 'text-gray-400 hover:text-gray-200'}`} onClick={() => setActiveTab('recommendations')}>
@@ -315,136 +311,6 @@ export function RevealScreen() {
                       </p>
                     </div>}
                 </div>
-              </GlassCard>
-            </motion.div>}
-          {/* What if tab */}
-          {activeTab === 'whatif' && <motion.div initial={{
-        opacity: 0
-      }} animate={{
-        opacity: 1
-      }} transition={{
-        duration: 0.3
-      }}>
-              <GlassCard className="p-6 mb-6" animate>
-                <h2 className="text-xl font-bold mb-6 flex items-center">
-                  <LineChartIcon className="mr-2 h-5 w-5 text-indigo-400" />
-                  Et si...?
-                </h2>
-                {/* Scenario 1: Reduce expenses */}
-                <div className="bg-black/20 p-4 rounded-lg mb-4">
-                  <h3 className="font-medium mb-3">
-                    Et si vous réduisiez vos dépenses de 10% ?
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4 mb-3">
-                    <div>
-                      <div className="text-sm text-gray-400">
-                        Économies mensuelles
-                      </div>
-                      <div className="text-xl font-medium text-green-400">
-                        +{(totalExpenses * 0.1).toFixed(0)}€
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-gray-400">
-                        Économies annuelles
-                      </div>
-                      <div className="text-xl font-medium text-green-400">
-                        +{(totalExpenses * 0.1 * 12).toFixed(0)}€
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-sm text-gray-300">
-                    En réduisant vos dépenses de seulement 10%, vous pourriez
-                    économiser{' '}
-                    <span className="text-green-400 font-medium">
-                      {(totalExpenses * 0.1 * 12).toFixed(0)}€
-                    </span>{' '}
-                    par an, soit l'équivalent de{' '}
-                    <span className="text-green-400 font-medium">
-                      {Math.round(totalExpenses * 0.1 * 12 / totalIncome * 100) / 100}{' '}
-                      mois
-                    </span>{' '}
-                    de revenus.
-                  </p>
-                </div>
-                {/* Scenario 2: Increase income */}
-                <div className="bg-black/20 p-4 rounded-lg mb-4">
-                  <h3 className="font-medium mb-3">
-                    Et si vous augmentiez vos revenus de 15% ?
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4 mb-3">
-                    <div>
-                      <div className="text-sm text-gray-400">
-                        Revenus supplémentaires
-                      </div>
-                      <div className="text-xl font-medium text-green-400">
-                        +{(totalIncome * 0.15).toFixed(0)}€
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-gray-400">
-                        Économies potentielles
-                      </div>
-                      <div className="text-xl font-medium text-green-400">
-                        +{(totalIncome * 0.15 * 12).toFixed(0)}€
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-sm text-gray-300">
-                    Une augmentation de 15% de vos revenus vous permettrait
-                    d'économiser jusqu'à{' '}
-                    <span className="text-green-400 font-medium">
-                      {(totalIncome * 0.15 * 12).toFixed(0)}€
-                    </span>{' '}
-                    par an, en maintenant votre niveau de vie actuel.
-                  </p>
-                </div>
-                {/* Crypto equivalent section */}
-                {cryptoData.length > 0 && <div className="bg-black/20 p-4 rounded-lg mt-4">
-                    <h4 className="font-medium mb-3 flex items-center">
-                      <div className="h-5 w-5 mr-2 text-yellow-400">₿</div>
-                      Équivalent en crypto-monnaies
-                    </h4>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>
-                          Vos dépenses mensuelles ({totalExpenses}€) équivalent
-                          à:
-                        </span>
-                        <span className="text-yellow-400 font-medium">
-                          {calculateCryptoEquivalent(totalExpenses)} BTC
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span>
-                          Votre épargne annuelle potentielle (
-                          {balance > 0 ? balance * 12 : 0}€):
-                        </span>
-                        <span className="text-yellow-400 font-medium">
-                          {calculateCryptoEquivalent(balance > 0 ? balance * 12 : 0)}{' '}
-                          BTC
-                        </span>
-                      </div>
-                    </div>
-                    <div className="mt-3 text-xs text-gray-400">
-                      Si vous aviez investi l'équivalent de vos dépenses
-                      mensuelles en Bitcoin il y a 5 ans, cela vaudrait
-                      aujourd'hui approximativement{' '}
-                      {(totalExpenses * 10).toLocaleString()}€
-                    </div>
-                  </div>}
-                {/* Activity suggestion */}
-                {activitySuggestion && <div className="bg-indigo-900/20 border border-indigo-500/30 p-4 rounded-lg mt-4">
-                    <h4 className="font-medium mb-2 flex items-center">
-                      <SparklesIcon className="h-4 w-4 mr-2 text-indigo-400" />
-                      Suggestion pour économiser
-                    </h4>
-                    <p className="text-sm">{activitySuggestion}</p>
-                    <p className="text-xs text-gray-400 mt-2">
-                      Les activités gratuites peuvent remplacer jusqu'à 23% des
-                      dépenses de loisirs mensuelles.
-                    </p>
-                  </div>}
               </GlassCard>
             </motion.div>}
           {/* Recommendations tab */}

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { GlassCard } from './ui/GlassCard';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
-import { MessageSquareIcon, StarIcon, SendIcon, CheckIcon, ThumbsUpIcon, ThumbsDownIcon, SmileIcon, FrownIcon, MehIcon } from 'lucide-react';
+import { MessageSquareIcon, StarIcon, SendIcon, CheckIcon, SmileIcon, FrownIcon, MehIcon } from 'lucide-react';
 export function Feedback() {
   const {
     themeColors
@@ -48,7 +48,7 @@ export function Feedback() {
       setSatisfaction(0);
     }, 3000);
   };
-  const handleSurveyResponse = response => {
+  const handleSurveyResponse = () => {
     // In a real app, you would send the survey response to your server
     if (currentSurvey < microsurveys.length - 1) {
       setCurrentSurvey(currentSurvey + 1);

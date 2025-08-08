@@ -1,12 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { GlassCard } from './ui/GlassCard';
-import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { toast, Toaster } from 'react-hot-toast';
-import { UserIcon, MailIcon, PhoneIcon, HomeIcon, CreditCardIcon, ShieldIcon, BellIcon, SaveIcon, CheckIcon, KeyIcon, BadgeIcon, CalendarIcon, PenIcon, EyeIcon, EyeOffIcon, FileIcon, DownloadIcon, UploadIcon, BookmarkIcon, LockIcon } from 'lucide-react';
+import { UserIcon, MailIcon, PhoneIcon, HomeIcon, ShieldIcon, BellIcon, SaveIcon, CheckIcon, KeyIcon, BadgeIcon, CalendarIcon, PenIcon, EyeIcon, EyeOffIcon, FileIcon, DownloadIcon, UploadIcon, BookmarkIcon, LockIcon } from 'lucide-react';
 export function Profile() {
-  const navigate = useNavigate();
   const {
     themeColors
   } = useTheme();

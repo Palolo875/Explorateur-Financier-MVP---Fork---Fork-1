@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { GlassCard } from './ui/GlassCard';
-import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
-import { SearchIcon, GraduationCapIcon, BookOpenIcon, ClockIcon, StarIcon, FilterIcon, ChevronRightIcon, CheckCircleIcon, PlayCircleIcon, DownloadIcon, ExternalLinkIcon } from 'lucide-react';
+import { SearchIcon, BookOpenIcon, ClockIcon, StarIcon, CheckCircleIcon, PlayCircleIcon, ExternalLinkIcon } from 'lucide-react';
 interface Lesson {
   id: string;
   title: string;
@@ -20,7 +19,6 @@ interface Lesson {
   rating: number; // 1-5
 }
 export function Lessons() {
-  const navigate = useNavigate();
   const {
     themeColors
   } = useTheme();

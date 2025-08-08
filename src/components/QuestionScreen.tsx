@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { externalApiService } from '../services/ExternalAPIService';
 import { useWeatherData } from '../services/ExternalAPIService';
+import { NewsArticle } from '../types/finance';
 export function QuestionScreen() {
   const [question, setQuestion] = useState('');
   const {
@@ -15,7 +16,9 @@ export function QuestionScreen() {
   } = useFinance();
   const {
     addQuestionToHistory,
-    questionHistory
+    questionHistory,
+    userCity,
+    setUserCity
   } = useFinanceStore();
   const navigate = useNavigate();
   const {
@@ -27,9 +30,8 @@ export function QuestionScreen() {
     content: string;
     author: string;
   } | null>(null);
-  const [relatedNews, setRelatedNews] = useState<any[]>([]);
+  const [relatedNews, setRelatedNews] = useState<NewsArticle[]>([]);
   const [advice, setAdvice] = useState<string | null>(null);
-  const [newsLoading, setNewsLoading] = useState(false);
   // Récupérer une citation inspirante au chargement
   useEffect(() => {
     const fetchQuote = async () => {
@@ -107,8 +109,6 @@ export function QuestionScreen() {
   const handleHistoryClick = (historicalQuestion: string) => {
     setQuestion(historicalQuestion);
   };
-  // Ajouter un état pour la ville de l'utilisateur
-  const [userCity, setUserCity] = useState('Paris');
   // Utiliser le hook pour la météo
   const {
     data: weatherData
@@ -131,9 +131,6 @@ export function QuestionScreen() {
           <div>Vent: {weatherData.windSpeed} km/h</div>
         </div>
       </div>;
-  };
-  const handleCityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUserCity(e.target.value);
   };
   return <motion.div className="w-full max-w-2xl mx-auto animate-fadeIn" initial={{
     opacity: 0
@@ -213,7 +210,7 @@ export function QuestionScreen() {
             <label className="text-sm text-gray-300 mb-1 block">
               Votre ville (pour les données locales)
             </label>
-            <input type="text" value={userCity} onChange={handleCityChange} placeholder="Paris" className="w-full bg-black/30 border border-white/10 rounded-lg py-2 px-3 text-white" />
+            <input type="text" value={userCity} onChange={(e) => setUserCity(e.target.value)} placeholder="Paris" className="w-full bg-black/30 border border-white/10 rounded-lg py-2 px-3 text-white" />
           </div>
           {/* Actualités en rapport avec la question */}
           {relatedNews.length > 0 && <div className="mb-6 bg-black/20 rounded-lg p-4">
