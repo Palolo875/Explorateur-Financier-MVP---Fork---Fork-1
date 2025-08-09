@@ -62,168 +62,38 @@ export function App() {
         <FinanceProvider>
           <React.Suspense fallback={<div className="w-full h-screen flex items-center justify-center bg-gray-900">Loading...</div>}>
             <Routes>
+              {/* Public routes */}
               <Route path="/login" element={<LoginScreen />} />
               <Route path="/register" element={<RegistrationScreen />} />
+
+              {/* Protected layout with nested routes */}
               <Route
                 path="/"
                 element={
                   <ProtectedRoute>
-                    <Layout>
-                      <Dashboard />
-                    </Layout>
+                    <Layout />
                   </ProtectedRoute>
                 }
-              />
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Dashboard />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/question"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <QuestionScreen />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/mapping"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <MappingScreen />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/reveal"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <RevealScreen />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/simulation"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <AdvancedSimulation />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/reports"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Reports />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/settings"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Settings />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Profile />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/library"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Library />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/lessons"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Lessons />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/feedback"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Feedback />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/export"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <ExportData />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/budget"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <BudgetPlanner />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/goals"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <GoalTracker />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/notifications"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <NotificationCenter />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
+              >
+                <Route index element={<Dashboard />} />
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="question" element={<QuestionScreen />} />
+                <Route path="mapping" element={<MappingScreen />} />
+                <Route path="reveal" element={<RevealScreen />} />
+                <Route path="simulation" element={<AdvancedSimulation />} />
+                <Route path="reports" element={<Reports />} />
+                <Route path="settings" element={<Settings />} />
+                <Route path="profile" element={<Profile />} />
+                <Route path="library" element={<Library />} />
+                <Route path="lessons" element={<Lessons />} />
+                <Route path="feedback" element={<Feedback />} />
+                <Route path="export" element={<ExportData />} />
+                <Route path="budget" element={<BudgetPlanner />} />
+                <Route path="goals" element={<GoalTracker />} />
+                <Route path="notifications" element={<NotificationCenter />} />
+              </Route>
+
+              {/* Fallback */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </React.Suspense>
