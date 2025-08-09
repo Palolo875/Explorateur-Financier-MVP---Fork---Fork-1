@@ -1,15 +1,10 @@
 import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { LayoutDashboardIcon, LineChartIcon, BarChart3Icon, UserIcon, SettingsIcon, LogOutIcon, MenuIcon, XIcon, BookOpenIcon, GraduationCapIcon, MessageSquareIcon } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useFinanceStore } from '../stores/financeStore';
 import { motion } from 'framer-motion';
-interface LayoutProps {
-  children: React.ReactNode;
-}
-export function Layout({
-  children
-}: LayoutProps) {
+export function Layout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -130,7 +125,7 @@ export function Layout({
         </div>
 
         {/* Page content */}
-        <main className="flex-1 p-4 md:p-8 overflow-auto">{children}</main>
+        <main className="flex-1 p-4 md:p-8 overflow-auto"><Outlet /></main>
       </div>
     </div>;
 }
