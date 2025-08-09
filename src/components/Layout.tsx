@@ -24,11 +24,7 @@ export function Layout() {
     }, 300);
     return () => clearTimeout(timer);
   }, []);
-  useEffect(() => {
-    console.log('Layout rendered, auth state:', {
-      isLoggedIn
-    });
-  }, [isLoggedIn]);
+  useEffect(() => {}, [isLoggedIn]);
   const isActive = (path: string) => {
     return location.pathname === path;
   };

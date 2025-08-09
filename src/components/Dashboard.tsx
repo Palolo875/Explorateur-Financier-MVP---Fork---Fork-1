@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { GlassCard } from './ui/GlassCard';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -6,13 +6,14 @@ import { useTheme } from '../context/ThemeContext';
 import { useFinance } from '../context/FinanceContext';
 import { useFinanceStore } from '../stores/financeStore';
 import { TrendingUpIcon, TrendingDownIcon, PiggyBankIcon, BarChart3Icon, AlertCircleIcon, CalendarIcon, SearchIcon, RefreshCwIcon, ArrowRightIcon, LineChartIcon, SettingsIcon, PlusIcon, ChevronRightIcon, InfoIcon, BellIcon, ClockIcon, CheckCircleIcon, XCircleIcon, TargetIcon, BriefcaseIcon, HeartIcon, NewspaperIcon, QuoteIcon } from 'lucide-react';
-import { XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, RadialBarChart, RadialBar, AreaChart, Area } from 'recharts';
+// Charts are lazy-loaded via ui/Chart
 import { format } from 'date-fns';
 import { FinancialInsight, Prediction, HiddenFee, NewsArticle, InspirationalQuote, StockMarketData, CryptoData, HistoricalData } from '../types/finance';
 import { toast, Toaster } from 'react-hot-toast';
 import CountUp from 'react-countup';
 import { Link } from 'react-router-dom';
 import { externalApiService } from '../services/ExternalAPIService';
+import { Chart } from './ui/Chart';
 // Importer les nouveaux hooks
 import { useWeatherData, useMarketIndices, useCentralBankRates, useCountryEconomicData } from '../hooks/useExternalAPI';
 // Type for dashboard notification
@@ -237,7 +238,7 @@ export function Dashboard() {
     navigate(path);
   };
   // Prepare data for charts
-  const expensesByCategory = financialData?.expenses?.reduce((acc, item) => {
+  const expensesByCategory = useMemo(() => (financialData?.expenses?.reduce((acc, item) => {
     const category = item.category;
     const value = typeof item.value === 'number' ? item.value : parseFloat(item.value) || 0;
     if (acc[category]) {
@@ -246,13 +247,13 @@ export function Dashboard() {
       acc[category] = value;
     }
     return acc;
-  }, {} as Record<string, number>) || {};
-  const pieChartData = Object.entries(expensesByCategory).map(([name, value]) => ({
+  }, {} as Record<string, number>) || {}), [financialData?.expenses]);
+  const pieChartData = useMemo(() => Object.entries(expensesByCategory).map(([name, value]) => ({
     name,
     value
-  }));
+  })), [expensesByCategory]);
   // Financial health radar data
-  const healthRadarData = [{
+  const healthRadarData = useMemo(() => ([{
     subject: 'Épargne',
     A: savingsRate > 20 ? 100 : savingsRate > 10 ? 70 : savingsRate > 5 ? 40 : 20,
     fullMark: 100
@@ -272,7 +273,7 @@ export function Dashboard() {
     subject: 'Protection',
     A: 65,
     fullMark: 100
-  }];
+  }]), [savingsRate, totalExpenses, totalIncome, financialData?.debts?.length, financialData?.investments?.length]);
   // Goal progress data
   const goalData = [{
     name: "Fonds d'urgence",
@@ -531,7 +532,7 @@ export function Dashboard() {
       </motion.div>
 
       {/* Key metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <GlassCard className="p-4" animate hover>
           <div className="flex items-center justify-between mb-2">
             <h3 className={`text-sm ${themeColors?.textSecondary || 'text-gray-400'}`}>
@@ -616,29 +617,9 @@ export function Dashboard() {
           </div>
           {isLoading ? <div className="h-64 flex items-center justify-center">
               <div className="animate-spin h-8 w-8 border-4 border-indigo-500 border-t-transparent rounded-full"></div>
-            </div> : historicalData && historicalData.length > 0 ? <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={historicalData} margin={{
-              top: 5,
-              right: 30,
-              left: 20,
-              bottom: 5
-            }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                  <XAxis dataKey="month" stroke="#aaa" />
-                  <YAxis stroke="#aaa" />
-                  <Tooltip formatter={value => [`${value.toLocaleString('fr-FR')}€`, '']} contentStyle={{
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '8px'
-              }} />
-                  <Legend />
-                  <Area type="monotone" dataKey="income" name="Revenus" stroke={COLORS[0]} fill={COLORS[0]} fillOpacity={0.3} />
-                  <Area type="monotone" dataKey="expenses" name="Dépenses" stroke={COLORS[1]} fill={COLORS[1]} fillOpacity={0.3} />
-                  <Area type="monotone" dataKey="balance" name="Balance" stroke={COLORS[2]} fill={COLORS[2]} fillOpacity={0.3} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div> : <div className="h-64 flex flex-col items-center justify-center">
+            </div> : historicalData && historicalData.length > 0 ? (
+              <Chart variant="area" data={historicalData} colors={COLORS} height={256} />
+            ) : <div className="h-64 flex flex-col items-center justify-center">
               <BarChart3Icon className="h-12 w-12 text-gray-600 mb-4" />
               <p className="text-gray-400 text-center">
                 Pas assez de données historiques disponibles
@@ -700,24 +681,10 @@ export function Dashboard() {
           </div>
           {isLoading ? <div className="h-64 flex items-center justify-center">
               <div className="animate-spin h-8 w-8 border-4 border-indigo-500 border-t-transparent rounded-full"></div>
-            </div> : pieChartData.length > 0 ? <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={pieChartData} cx="50%" cy="50%" labelLine={false} outerRadius={80} fill="#8884d8" dataKey="value" label={({
-                name,
-                percent
-              }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                    {pieChartData.map((entry, i) => <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />)}
-                  </Pie>
-                  <Tooltip formatter={value => [`${value.toLocaleString('fr-FR')}€`, 'Montant']} contentStyle={{
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '8px'
-              }} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div> : <div className="h-64 flex flex-col items-center justify-center">
-              <PieChart className="h-12 w-12 text-gray-600 mb-4" />
+            </div> : pieChartData.length > 0 ? (
+              <Chart variant="pie" data={pieChartData} colors={COLORS} height={256} />
+            ) : <div className="h-64 flex flex-col items-center justify-center">
+              <BarChart3Icon className="h-12 w-12 text-gray-600 mb-4" />
               <p className="text-gray-400 text-center">
                 Pas de données de dépenses disponibles
               </p>
@@ -760,21 +727,9 @@ export function Dashboard() {
           </div>
           {isLoading ? <div className="h-64 flex items-center justify-center">
               <div className="animate-spin h-8 w-8 border-4 border-indigo-500 border-t-transparent rounded-full"></div>
-            </div> : <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={healthRadarData}>
-                  <PolarGrid stroke="#444" />
-                  <PolarAngleAxis dataKey="subject" stroke="#aaa" />
-                  <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="#aaa" />
-                  <Radar name="Santé financière" dataKey="A" stroke={COLORS[0]} fill={COLORS[0]} fillOpacity={0.6} />
-                  <Tooltip formatter={value => [`${value}/100`, '']} contentStyle={{
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '8px'
-              }} />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>}
+            </div> : (
+              <Chart variant="radar" data={healthRadarData} colors={COLORS} height={256} />
+            )}
           <div className="mt-2">
             <button onClick={() => navigate('/reveal')} className={`w-full py-2 rounded-lg bg-gradient-to-r ${themeColors?.primary || 'from-indigo-500 to-purple-600'} hover:opacity-90 text-sm flex items-center justify-center`}>
               Analyse complète
@@ -796,22 +751,9 @@ export function Dashboard() {
           </div>
           {isLoading ? <div className="h-64 flex items-center justify-center">
               <div className="animate-spin h-8 w-8 border-4 border-indigo-500 border-t-transparent rounded-full"></div>
-            </div> : <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadialBarChart cx="50%" cy="50%" innerRadius="20%" outerRadius="80%" barSize={15} data={goalData}>
-                  <RadialBar label={{
-                position: 'insideStart',
-                fill: '#fff'
-              }} background dataKey="value" />
-                  <Tooltip formatter={value => [`${value}%`, 'Progression']} contentStyle={{
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '8px'
-              }} />
-                  <Legend iconSize={10} layout="vertical" verticalAlign="middle" align="right" />
-                </RadialBarChart>
-              </ResponsiveContainer>
-            </div>}
+            </div> : (
+              <Chart variant="radialBar" data={goalData} colors={COLORS} height={256} />
+            )}
           <div className="mt-2 space-y-2">
             <div className="bg-black/20 p-2 rounded-lg flex justify-between items-center">
               <div className="text-sm">Fonds d'urgence</div>
@@ -948,44 +890,22 @@ export function Dashboard() {
           </div>
           {isLoading ? <div className="h-64 flex items-center justify-center">
               <div className="animate-spin h-8 w-8 border-4 border-indigo-500 border-t-transparent rounded-full"></div>
-            </div> : <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={[{
-              month: 'J',
-              valeur: totalIncome - totalExpenses
-            }, {
-              month: 'F',
-              valeur: (totalIncome - totalExpenses) * 1.02
-            }, {
-              month: 'M',
-              valeur: (totalIncome - totalExpenses) * 1.03
-            }, {
-              month: 'A',
-              valeur: (totalIncome - totalExpenses) * 1.05
-            }, {
-              month: 'M',
-              valeur: (totalIncome - totalExpenses) * 1.06
-            }, {
-              month: 'J',
-              valeur: (totalIncome - totalExpenses) * 1.08
-            }]} margin={{
-              top: 5,
-              right: 30,
-              left: 20,
-              bottom: 5
-            }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                  <XAxis dataKey="month" stroke="#aaa" />
-                  <YAxis stroke="#aaa" />
-                  <Tooltip formatter={value => [`${value.toLocaleString('fr-FR')}€`, 'Épargne prévisionnelle']} contentStyle={{
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '8px'
-              }} />
-                  <Bar dataKey="valeur" fill={COLORS[4]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>}
+            </div> : (
+              <Chart
+                variant="bar"
+                data={[
+                  { month: 'J', valeur: totalIncome - totalExpenses },
+                  { month: 'F', valeur: (totalIncome - totalExpenses) * 1.02 },
+                  { month: 'M', valeur: (totalIncome - totalExpenses) * 1.03 },
+                  { month: 'A', valeur: (totalIncome - totalExpenses) * 1.05 },
+                  { month: 'M', valeur: (totalIncome - totalExpenses) * 1.06 },
+                  { month: 'J', valeur: (totalIncome - totalExpenses) * 1.08 },
+                ]}
+                colors={COLORS}
+                height={256}
+                name="Épargne prévisionnelle"
+              />
+            )}
           <div className="mt-4">
             <button onClick={() => navigate('/simulation')} className={`w-full py-2 rounded-lg bg-gradient-to-r ${themeColors?.primary || 'from-indigo-500 to-purple-600'} hover:opacity-90 text-sm flex items-center justify-center`}>
               Simulations avancées

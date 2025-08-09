@@ -3,7 +3,7 @@ import { GlassCard } from './ui/GlassCard';
 import { useTheme } from '../context/ThemeContext';
 import { useFinance } from '../context/FinanceContext';
 import { FileBarChartIcon, CheckCircleIcon, CalendarIcon, BookIcon } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { Chart } from './ui/Chart';
 import dayjs from 'dayjs';
 import 'dayjs/locale/fr';
 // Set locale
@@ -44,7 +44,7 @@ export function Reports() {
         summary: "Cette analyse évalue votre capacité à atteindre votre objectif d'achat immobilier.",
         recommendations: ["Augmentez votre taux d'épargne de 5% pour réduire le délai", "Explorez les aides à l'accession à la propriété"]
       }];
-      console.log('Rapports chargés:', mockReports);
+      /* reports generated */
       setReports(mockReports);
       setSelectedReport(mockReports[0]);
     } catch (err) {
@@ -160,46 +160,14 @@ export function Reports() {
                       <PieChart className="h-5 w-5 mr-2 text-purple-400" />
                       Répartition des dépenses
                     </h3>
-                    <div className="h-64">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie data={pieChartData} cx="50%" cy="50%" labelLine={false} outerRadius={80} fill="#8884d8" dataKey="value" label={({
-                      name,
-                      percent
-                    }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                            {pieChartData.map((entry, index) => <Cell key={`cell-${index}`} fill={themeColors.chartColors[index % themeColors.chartColors.length]} />)}
-                          </Pie>
-                          <Tooltip formatter={value => [`${value.toLocaleString('fr-FR')}€`, 'Montant']} contentStyle={{
-                      backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '8px'
-                    }} />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
+                    <Chart variant="pie" data={pieChartData} colors={themeColors.chartColors} height={256} />
                   </div>
                   <div>
                     <h3 className="font-medium mb-3 flex items-center">
                       <BarChart className="h-5 w-5 mr-2 text-blue-400" />
                       Revenus vs Dépenses
                     </h3>
-                    <div className="h-64">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={barChartData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                          <XAxis dataKey="name" stroke="#aaa" />
-                          <YAxis stroke="#aaa" />
-                          <Tooltip formatter={value => [`${value.toLocaleString('fr-FR')}€`, '']} contentStyle={{
-                      backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '8px'
-                    }} />
-                          <Legend />
-                          <Bar dataKey="revenus" fill={themeColors.chartColors[1]} />
-                          <Bar dataKey="dépenses" fill={themeColors.chartColors[0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
+                    <Chart variant="bar" data={barChartData} colors={themeColors.chartColors} height={256} />
                   </div>
                 </div>
                 <h3 className="font-medium mb-3 flex items-center">

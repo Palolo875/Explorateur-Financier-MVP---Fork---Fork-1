@@ -21,13 +21,7 @@
     "react-hot-toast": "^2.4.1",
     "react-router-dom": "^6.26.2",
     "recharts": "^2.12.7",
-    "zustand": "latest",
-    "@testing-library/react": "latest",
-    "vitest": "latest",
-    "date-fns/locale": "latest",
-    "dayjs/locale/fr": "latest",
-    "zustand/middleware": "latest",
-    "@testing-library/jest-dom": "latest"
+    "zustand": "latest"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.4",
