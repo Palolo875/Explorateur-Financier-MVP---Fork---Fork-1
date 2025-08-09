@@ -69,11 +69,9 @@ export interface FinancialReport {
   recommendations: string[];
   simulationResults?: SimulationResult;
 }
-
 export interface Prediction {
   [key: string]: unknown;
 }
-
 export interface HiddenFee {
   totalAmount: number;
   items: Array<{
@@ -82,7 +80,6 @@ export interface HiddenFee {
     description: string;
   }>;
 }
-
 export interface NewsArticle {
   title: string;
   description: string;
@@ -93,19 +90,16 @@ export interface NewsArticle {
   publishedAt: string;
   urlToImage?: string;
 }
-
 export interface InspirationalQuote {
   content: string;
   author: string;
 }
-
 export interface StockMarketData {
   symbol: string;
   price: string;
   change: string;
   changePercent: string;
 }
-
 export interface CryptoData {
   id: string;
   symbol: string;
@@ -114,7 +108,6 @@ export interface CryptoData {
   current_price: number;
   price_change_percentage_24h: number;
 }
-
 export interface HistoricalData {
   month: string;
   income: number;
@@ -123,7 +116,6 @@ export interface HistoricalData {
   savings: number;
   investments: number;
 }
-
 export interface User {
   id: string;
   email: string;

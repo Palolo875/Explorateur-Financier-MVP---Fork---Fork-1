@@ -7,7 +7,6 @@ import { useFinance } from '../context/FinanceContext';
 import { DownloadIcon, FileSpreadsheetIcon, FileJsonIcon, CheckIcon, ClockIcon, AlertCircleIcon } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 type ExportFormat = 'csv' | 'pdf' | 'json' | 'excel';
-
 interface ExportData {
   summary: {
     totalIncome: number;
@@ -24,7 +23,6 @@ interface ExportData {
   };
   historical: Record<string, unknown> | null;
 }
-
 export function ExportData() {
   const {
     themeColors

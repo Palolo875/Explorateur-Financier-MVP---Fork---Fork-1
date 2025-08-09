@@ -2,7 +2,9 @@ import { FinancialItem, FinancialInsight, SimulationParams, SimulationResult, Fi
 // Modèle de scoring IA pour l'analyse financière
 interface AIModelParams {
   financialData: Partial<FinancialData>;
-  emotionalContext?: { mood?: number };
+  emotionalContext?: {
+    mood?: number;
+  };
   marketConditions?: Record<string, unknown>;
 }
 export class AIFinanceService {
