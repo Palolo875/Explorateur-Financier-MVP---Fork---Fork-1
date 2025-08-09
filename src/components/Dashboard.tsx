@@ -14,7 +14,7 @@ import CountUp from 'react-countup';
 import { Link } from 'react-router-dom';
 import { externalApiService } from '../services/ExternalAPIService';
 // Importer les nouveaux hooks
-import { useWeatherData, useMarketIndices, useCentralBankRates, useCountryEconomicData } from '../services/ExternalAPIService';
+import { useWeatherData, useMarketIndices, useCentralBankRates, useCountryEconomicData } from '../hooks/useExternalAPI';
 // Type for dashboard notification
 interface DashboardNotification {
   id: string;
@@ -42,7 +42,7 @@ export function Dashboard() {
     refreshData
   } = useFinance();
   const {
-    questionHistory,
+    questionHistory
   } = useFinanceStore();
   // State variables
   const [timeframe, setTimeframe] = useState('month');
@@ -841,7 +841,7 @@ export function Dashboard() {
           {isLoading ? <div className="h-64 flex items-center justify-center">
               <div className="animate-spin h-8 w-8 border-4 border-indigo-500 border-t-transparent rounded-full"></div>
             </div> : <div className="space-y-3 max-h-64 overflow-y-auto">
-                {insights.length > 0 ? insights.map((insight) => <div key={insight.id} className={`p-3 rounded-lg ${insight.impact === 'high' ? 'bg-red-900/20 border border-red-500/30' : insight.impact === 'medium' ? 'bg-yellow-900/20 border border-yellow-500/30' : 'bg-green-900/20 border border-green-500/30'}`}>
+              {insights.length > 0 ? insights.map(insight => <div key={insight.id} className={`p-3 rounded-lg ${insight.impact === 'high' ? 'bg-red-900/20 border border-red-500/30' : insight.impact === 'medium' ? 'bg-yellow-900/20 border border-yellow-500/30' : 'bg-green-900/20 border border-green-500/30'}`}>
                     <div className="flex items-center mb-1">
                       <span className={`w-2 h-2 rounded-full mr-2 ${insight.impact === 'high' ? 'bg-red-500' : insight.impact === 'medium' ? 'bg-yellow-500' : 'bg-green-500'}`}></span>
                       <h4 className="text-sm font-medium">{insight.title}</h4>

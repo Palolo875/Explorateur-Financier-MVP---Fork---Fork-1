@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { GlassCard } from './ui/GlassCard';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +9,7 @@ import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, AlertCircleIcon, TrendingUpIc
 import { toast, Toaster } from 'react-hot-toast';
 import { FinancialInsight, CryptoData, StockMarketData } from '../types/finance';
 import { externalApiService } from '../services/ExternalAPIService';
-import { useWeatherData, useMarketIndices } from '../services/ExternalAPIService';
+import { useWeatherData, useMarketIndices } from '../hooks/useExternalAPI';
 export function RevealScreen() {
   const navigate = useNavigate();
   const {
@@ -20,7 +20,9 @@ export function RevealScreen() {
     financialData,
     generateInsights
   } = useFinance();
-  const { userCity } = useFinanceStore();
+  const {
+    userCity
+  } = useFinanceStore();
   // States
   const [isLoading, setIsLoading] = useState(true);
   const [insights, setInsights] = useState<FinancialInsight[]>([]);
@@ -66,7 +68,6 @@ export function RevealScreen() {
       console.error('Error fetching stock data:', error);
     }
   }, []);
-
   // Load insights and API data
   useEffect(() => {
     const loadData = async () => {

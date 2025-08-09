@@ -132,7 +132,6 @@ interface WeatherData {
   condition: string;
   temperature: number;
 }
-
 export function MappingScreen() {
   const navigate = useNavigate();
   const {
@@ -144,7 +143,9 @@ export function MappingScreen() {
     userQuestion,
     emotionalContext
   } = useFinance();
-  const { userCity } = useFinanceStore();
+  const {
+    userCity
+  } = useFinanceStore();
   const [activeTab, setActiveTab] = useState<CategoryType>('income');
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState<string | null>(null);

@@ -1,63 +1,9 @@
-// Type definitions
-interface NewsArticle {
-  title: string;
-  description: string;
-  url: string;
-  source: {
-    name: string;
-  };
-  publishedAt: string;
-  urlToImage?: string;
-}
-interface StockQuote {
-  symbol: string;
-  price: string;
-  change: string;
-  changePercent: string;
-}
-interface WeatherData {
-  temperature: number;
-  condition: string;
-  humidity: number;
-  windSpeed: number;
-  location: string;
-  icon: string;
-}
-interface MarketIndexData {
-  name: string;
-  value: number;
-  change: number;
-  changePercent: number;
-}
-interface CountryEconomicData {
-  country: string;
-  gdp: number;
-  inflation: number;
-  unemployment: number;
-}
+import React from 'react';
+import { WeatherData, MarketIndexData, StockMarketData, CryptoData, CountryEconomicData, NewsArticle, InspirationalQuote } from '../types/finance';
 class ExternalAPIService {
   private static instance: ExternalAPIService;
-  private cache: Map<string, {
-    data: unknown;
-    timestamp: number;
-  }>;
-  private cacheDuration = 30 * 60 * 1000; // 30 minutes par défaut
   private constructor() {
-    this.cache = new Map();
-    // Réduire la durée du cache pour les données météo et autres données volatiles
-    this.setCacheDurationForType('weather', 10 * 60 * 1000); // 10 minutes pour la météo
-  }
-  // Ajout d'une durée de cache spécifique par type de données
-  private cacheDurations: Map<string, number> = new Map();
-  private fmpApiKey = 'YOUR_FINANCIAL_MODELING_PREP_API_KEY';
-  private openWeatherMapApiKey = 'YOUR_OPENWEATHERMAP_API_KEY';
-  // Configurer une durée de cache spécifique pour un type de données
-  public setCacheDurationForType(type: string, durationInMs: number): void {
-    this.cacheDurations.set(type, durationInMs);
-  }
-  // Obtenir la durée de cache pour un type spécifique
-  private getCacheDurationForType(type: string): number {
-    return this.cacheDurations.get(type) || this.cacheDuration;
+    // Private constructor to enforce singleton pattern
   }
   public static getInstance(): ExternalAPIService {
     if (!ExternalAPIService.instance) {
@@ -65,302 +11,161 @@ class ExternalAPIService {
     }
     return ExternalAPIService.instance;
   }
-  // Configurer la durée du cache
-  public setCacheDuration(durationInMs: number): void {
-    this.cacheDuration = durationInMs;
-  }
-  // Cache management
-  private getCache<T>(key: string): T | null {
-    const cachedItem = this.cache.get(key);
-    if (cachedItem) {
-      // Détecter le type de données pour appliquer la bonne durée de cache
-      const dataType = key.split('_')[0]; // ex: weather_Paris_FR => weather
-      const cacheDuration = this.getCacheDurationForType(dataType);
-      // Check if cache is still valid with the appropriate duration
-      if (Date.now() - cachedItem.timestamp < cacheDuration) {
-        return cachedItem.data as T;
-      }
-    }
-    return null;
-  }
-  private setCache(key: string, data: unknown): void {
-    this.cache.set(key, {
-      data,
-      timestamp: Date.now()
-    });
-  }
-  // Nouvelle méthode pour gérer les appels API avec fallback
-  // Méthode générique pour les appels API avec gestion d'erreur
-  private async fetchWithErrorHandling<T>(url: string, options?: RequestInit, mockDataFn?: () => T): Promise<T> {
-    try {
-      const response = await fetch(url, options);
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-      return await response.json();
-    } catch (error) {
-      console.error(`Error fetching data from ${url}:`, error);
-      if (mockDataFn) {
-        console.log('Using mock data as fallback');
-        return mockDataFn();
-      }
-      throw error;
-    }
-  }
-  // News API - Get news articles by keywords using Gnews (API gratuite avec limite)
-  public async getNewsArticles(keywords: string, count = 5): Promise<NewsArticle[]> {
-    const apiKey = 'c01873f1471c862b7b787e3e82f9a561'; // Clé démo - à remplacer par la vôtre
-    const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(keywords)}&max=${count}&lang=fr&apikey=${apiKey}`;
-    return this.fetchWithErrorHandling(url, {}, () => []).then(data => {
-      if (data && data.articles) {
-        return data.articles.map((article: any) => ({
-          title: article.title,
-          description: article.description,
-          url: article.url,
-          source: {
-            name: article.source?.name || 'Source inconnue'
-          },
-          publishedAt: article.publishedAt,
-          urlToImage: article.image
-        }));
-      }
-      return [];
-    });
-  }
-  // Autres méthodes avec la nouvelle approche
-  public async getStockQuote(symbol: string): Promise<StockQuote | null> {
-    const url = `https://financialmodelingprep.com/api/v3/quote/${symbol}?apikey=${this.fmpApiKey}`;
-    return this.fetchWithErrorHandling(url, {}, () => this.getMockStockQuote(symbol)).then(data => {
-      if (data && data.length > 0) {
-        const quote = data[0];
-        return {
-          symbol: quote.symbol,
-          price: quote.price.toFixed(2),
-          change: quote.change.toFixed(2),
-          changePercent: quote.changesPercentage.toFixed(2),
-        };
-      }
-      return null;
-    });
-  }
-
-  public async getQuote(): Promise<{ content: string; author: string } | null> {
-    return this.fetchWithErrorHandling('https://api.quotable.io/random?tags=finance', {}, () => ({
-      content: 'An investment in knowledge pays the best interest.',
-      author: 'Benjamin Franklin',
-    }));
-  }
-
-  public async getCryptoData(currency: string, count: number): Promise<any[]> {
-    const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=${count}&page=1&sparkline=false`;
-    return this.fetchWithErrorHandling(url, {}, () => []);
-  }
-
-  public async getActivitySuggestion(): Promise<{ activity: string } | null> {
-    return this.fetchWithErrorHandling('https://www.boredapi.com/api/activity?type=recreational', {}, () => ({
-      activity: 'Read a book',
-    }));
-  }
-
-  public async getExchangeRates(base: string): Promise<{ rates: Record<string, number> } | null> {
-    const url = `https://api.exchangerate.host/latest?base=${base}`;
-    return this.fetchWithErrorHandling(url, {}, () => ({ rates: { USD: 1.2, EUR: 1.0 } }));
-  }
-  public async getWeatherData(city: string, country = 'FR'): Promise<WeatherData> {
-    const url = `https://api.openweathermap.org/data/2.5/weather?q=${city},${country}&appid=${this.openWeatherMapApiKey}&units=metric&lang=fr`;
-    return this.fetchWithErrorHandling(url, {}, () => ({
-      temperature: 20,
-      condition: 'Ensoleillé',
-      humidity: 60,
-      windSpeed: 10,
+  // Weather API
+  async getWeatherData(city: string, country = 'FR'): Promise<WeatherData> {
+    // Mock implementation for demo purposes
+    console.log(`Fetching weather data for ${city}, ${country}`);
+    return {
       location: city,
-      icon: 'https://openweathermap.org/img/wn/01d@2x.png'
-    })).then(data => {
-      if (data && data.main) {
-        return {
-          temperature: data.main.temp,
-          condition: data.weather[0].description,
-          humidity: data.main.humidity,
-          windSpeed: data.wind.speed,
-          location: data.name,
-          icon: `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`,
-        };
-      }
-      return {
-        temperature: 20,
-        condition: 'Ensoleillé',
-        humidity: 60,
-        windSpeed: 10,
-        location: city,
-        icon: 'https://openweathermap.org/img/wn/01d@2x.png'
-      };
-    });
+      temperature: Math.floor(Math.random() * 15) + 10,
+      condition: ['Ensoleillé', 'Nuageux', 'Pluvieux', 'Partiellement nuageux'][Math.floor(Math.random() * 4)],
+      humidity: Math.floor(Math.random() * 30) + 50,
+      windSpeed: Math.floor(Math.random() * 20) + 5,
+      icon: `https://cdn.weatherapi.com/weather/64x64/day/${Math.floor(Math.random() * 3) + 1}.png`
+    };
   }
-  public async getMarketIndices(): Promise<MarketIndexData[]> {
-    const url = `https://financialmodelingprep.com/api/v3/actives?apikey=${this.fmpApiKey}`;
-    return this.fetchWithErrorHandling(url, {}, () => []).then(data => {
-      if (data && data.length > 0) {
-        return data.slice(0, 5).map((index: any) => ({
-          name: index.ticker,
-          value: index.price,
-          change: index.changes,
-          changePercent: index.changesPercentage,
-        }));
-      }
-      return [];
-    });
+  // Market indices API
+  async getMarketIndices(): Promise<MarketIndexData[]> {
+    // Mock implementation for demo purposes
+    return [{
+      name: 'CAC 40',
+      value: 7200 + Math.random() * 200,
+      changePercent: (Math.random() * 2 - 1) * 2 // Between -2% and +2%
+    }, {
+      name: 'S&P 500',
+      value: 4200 + Math.random() * 200,
+      changePercent: (Math.random() * 2 - 1) * 2
+    }, {
+      name: 'Nasdaq',
+      value: 13200 + Math.random() * 400,
+      changePercent: (Math.random() * 2 - 1) * 2
+    }, {
+      name: 'Dow Jones',
+      value: 33000 + Math.random() * 1000,
+      changePercent: (Math.random() * 2 - 1) * 2
+    }];
   }
-  public async getCentralBankRates(): Promise<Record<string, number>> {
-    const url = `https://financialmodelingprep.com/api/v4/central-bank-rates?apikey=${this.fmpApiKey}`;
-    return this.fetchWithErrorHandling(url, {}, () => ({
-      BCE: 4.5,
+  // Central bank rates API
+  async getCentralBankRates(): Promise<Record<string, number>> {
+    // Mock implementation for demo purposes
+    return {
+      BCE: 3.75,
       FED: 5.25,
-      BoE: 5.0,
-    })).then(data => {
-      if (data && data.length > 0) {
-        const rates: Record<string, number> = {};
-        data.slice(0, 3).forEach((rate: any) => {
-          rates[rate.country] = rate.rate;
-        });
-        return rates;
-      }
-      return {
-        BCE: 4.5,
-        FED: 5.25,
-        BoE: 5.0,
-      };
-    });
+      "Banque d'Angleterre": 5.0,
+      'Banque du Japon': 0.1
+    };
   }
-
-  public async getCountryEconomicData(country: string): Promise<CountryEconomicData> {
-    const url = `https://financialmodelingprep.com/api/v4/economic-indicator/gdp?name=${country}&apikey=${this.fmpApiKey}`;
-    return this.fetchWithErrorHandling(url, {}, () => ({
+  // Country economic data API
+  async getCountryEconomicData(country: string): Promise<CountryEconomicData> {
+    // Mock implementation for demo purposes
+    const gdpRanges: Record<string, [number, number]> = {
+      France: [-0.5, 1.5],
+      Germany: [-0.3, 1.7],
+      USA: [0.2, 2.2],
+      UK: [-0.4, 1.6]
+    };
+    const range = gdpRanges[country] || [-1, 2];
+    return {
       country,
-      gdp: 1.5,
-      inflation: 2.8,
-      unemployment: 7.2,
-    })).then(data => {
-      if (data && data.length > 0) {
-        return {
-          country,
-          gdp: data[0].gdp,
-          inflation: data[0].inflation,
-          unemployment: data[0].unemployment,
-        };
-      }
-      return {
-        country,
-        gdp: 1.5,
-        inflation: 2.8,
-        unemployment: 7.2,
-      };
-    });
+      gdp: +(range[0] + Math.random() * (range[1] - range[0])).toFixed(1),
+      inflation: +(2 + Math.random() * 4).toFixed(1),
+      unemployment: +(5 + Math.random() * 5).toFixed(1),
+      debt: Math.floor(60 + Math.random() * 40)
+    };
+  }
+  // News API
+  async getNewsArticles(query: string, count = 3): Promise<NewsArticle[]> {
+    // Mock implementation for demo purposes
+    const titles = ["La BCE maintient ses taux d'intérêt", 'Inflation: légère baisse en France', 'Les marchés financiers en hausse', 'Nouvelles mesures fiscales annoncées', 'Le CAC 40 atteint un nouveau record'];
+    return Array.from({
+      length: count
+    }).map((_, i) => ({
+      title: titles[Math.floor(Math.random() * titles.length)],
+      description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam eget felis eget urna ultricies fermentum.',
+      url: 'https://example.com/news',
+      source: {
+        id: `source-${i}`,
+        name: 'Finance Actu'
+      },
+      publishedAt: new Date().toISOString()
+    }));
+  }
+  // Inspirational quote API
+  async getQuote(): Promise<InspirationalQuote> {
+    // Mock implementation for demo purposes
+    const quotes = [{
+      content: "L'argent est un bon serviteur, mais un mauvais maître.",
+      author: 'Francis Bacon'
+    }, {
+      content: 'Investir dans la connaissance rapporte toujours les meilleurs intérêts.',
+      author: 'Benjamin Franklin'
+    }, {
+      content: "Ne dépensez pas ce que vous n'avez pas gagné pour acheter ce dont vous n'avez pas besoin.",
+      author: 'Warren Buffett'
+    }, {
+      content: "La richesse n'est pas dans le fait d'avoir beaucoup de biens, mais dans le fait d'avoir peu de besoins.",
+      author: 'Épictète'
+    }];
+    return quotes[Math.floor(Math.random() * quotes.length)];
+  }
+  // Stock market API
+  async getStockQuote(symbol: string): Promise<StockMarketData> {
+    // Mock implementation for demo purposes
+    return {
+      symbol,
+      price: (Math.random() * 200 + 100).toFixed(2),
+      changePercent: (Math.random() * 4 - 2).toFixed(2),
+      volume: Math.floor(Math.random() * 10000000),
+      marketCap: Math.floor(Math.random() * 1000000000000)
+    };
+  }
+  // Crypto API
+  async getCryptoData(currency = 'eur', count = 3): Promise<CryptoData[]> {
+    // Mock implementation for demo purposes
+    const cryptos = [{
+      id: 'bitcoin',
+      symbol: 'btc',
+      name: 'Bitcoin',
+      image: 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png'
+    }, {
+      id: 'ethereum',
+      symbol: 'eth',
+      name: 'Ethereum',
+      image: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png'
+    }, {
+      id: 'tether',
+      symbol: 'usdt',
+      name: 'Tether',
+      image: 'https://assets.coingecko.com/coins/images/325/small/Tether.png'
+    }, {
+      id: 'binancecoin',
+      symbol: 'bnb',
+      name: 'Binance Coin',
+      image: 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png'
+    }, {
+      id: 'ripple',
+      symbol: 'xrp',
+      name: 'XRP',
+      image: 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png'
+    }];
+    return cryptos.slice(0, count).map(crypto => ({
+      ...crypto,
+      current_price: Math.floor(crypto.id === 'bitcoin' ? 30000 + Math.random() * 5000 : crypto.id === 'ethereum' ? 2000 + Math.random() * 500 : crypto.id === 'tether' ? 0.95 + Math.random() * 0.1 : 100 + Math.random() * 50),
+      price_change_percentage_24h: Math.random() * 10 - 5,
+      market_cap: Math.floor(Math.random() * 1000000000000),
+      total_volume: Math.floor(Math.random() * 10000000000)
+    }));
+  }
+  // Activity suggestion API
+  async getActivitySuggestion(): Promise<{
+    activity: string;
+  } | null> {
+    // Mock implementation for demo purposes
+    const activities = ['Comparer les offres de banques en ligne pour réduire vos frais', 'Mettre en place un virement automatique vers un compte épargne', 'Revoir votre budget alimentation pour réduire les dépenses', "Vérifier si vous pouvez renégocier vos contrats d'assurance", "Analyser vos abonnements pour éliminer ceux que vous n'utilisez pas"];
+    return {
+      activity: activities[Math.floor(Math.random() * activities.length)]
+    };
   }
 }
 // Create singleton instance
 export const externalApiService = ExternalAPIService.getInstance();
-// Export hooks
-export function useWeatherData(city: string, country = 'FR') {
-  const [data, setData] = useState<WeatherData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const weatherData = await externalApiService.getWeatherData(city, country);
-        setData(weatherData);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching weather data:', err);
-        setError('Failed to load weather data');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [city, country]);
-  return {
-    data,
-    loading,
-    error
-  };
-}
-export function useMarketIndices() {
-  const [data, setData] = useState<MarketIndexData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const indices = await externalApiService.getMarketIndices();
-        setData(indices);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching market indices:', err);
-        setError('Failed to load market indices');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-  return {
-    data,
-    loading,
-    error
-  };
-}
-export function useCentralBankRates() {
-  const [data, setData] = useState<Record<string, number>>({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const rates = await externalApiService.getCentralBankRates();
-        setData(rates);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching central bank rates:', err);
-        setError('Failed to load central bank rates');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-  return {
-    data,
-    loading,
-    error
-  };
-}
-export function useCountryEconomicData(country: string) {
-  const [data, setData] = useState<CountryEconomicData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const economicData = await externalApiService.getCountryEconomicData(country);
-        setData(economicData);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching economic data:', err);
-        setError('Failed to load economic data');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [country]);
-  return {
-    data,
-    loading,
-    error
-  };
-}

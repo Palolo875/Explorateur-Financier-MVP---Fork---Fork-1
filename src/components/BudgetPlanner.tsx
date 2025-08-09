@@ -24,7 +24,7 @@ export function BudgetPlanner() {
     themeColors
   } = useTheme();
   const {
-    financialData,
+    financialData
   } = useFinance();
   // État du budget
   const [selectedPeriod, setSelectedPeriod] = useState<string>('current');

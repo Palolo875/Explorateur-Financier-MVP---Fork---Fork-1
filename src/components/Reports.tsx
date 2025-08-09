@@ -8,7 +8,6 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/fr';
 // Set locale
 dayjs.locale('fr');
-
 interface Report {
   id: string;
   title: string;
@@ -16,12 +15,13 @@ interface Report {
   summary: string;
   recommendations: string[];
 }
-
 export function Reports() {
   const {
     themeColors
   } = useTheme();
-  const { financialData } = useFinance();
+  const {
+    financialData
+  } = useFinance();
   const [reports, setReports] = useState<Report[]>([]);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -57,7 +57,6 @@ export function Reports() {
   const formatDate = (dateString: string) => {
     return dayjs(dateString).format('DD MMMM YYYY');
   };
-
   const pieChartData = financialData.expenses.reduce((acc, expense) => {
     const category = acc.find(item => item.name === expense.category);
     if (category) {
@@ -65,20 +64,19 @@ export function Reports() {
     } else {
       acc.push({
         name: expense.category,
-        value: typeof expense.value === 'number' ? expense.value : parseFloat(expense.value),
+        value: typeof expense.value === 'number' ? expense.value : parseFloat(expense.value)
       });
     }
     return acc;
-  }, [] as { name: string; value: number }[]);
-
-  const barChartData = [
-    {
-      name: 'Revenus vs Dépenses',
-      revenus: financialData.incomes.reduce((sum, item) => sum + (typeof item.value === 'number' ? item.value : parseFloat(item.value)), 0),
-      dépenses: financialData.expenses.reduce((sum, item) => sum + (typeof item.value === 'number' ? item.value : parseFloat(item.value)), 0),
-    },
-  ];
-
+  }, [] as {
+    name: string;
+    value: number;
+  }[]);
+  const barChartData = [{
+    name: 'Revenus vs Dépenses',
+    revenus: financialData.incomes.reduce((sum, item) => sum + (typeof item.value === 'number' ? item.value : parseFloat(item.value)), 0),
+    dépenses: financialData.expenses.reduce((sum, item) => sum + (typeof item.value === 'number' ? item.value : parseFloat(item.value)), 0)
+  }];
   return <div className="w-full max-w-6xl mx-auto pb-20">
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
@@ -165,10 +163,17 @@ export function Reports() {
                     <div className="h-64">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
-                          <Pie data={pieChartData} cx="50%" cy="50%" labelLine={false} outerRadius={80} fill="#8884d8" dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                          <Pie data={pieChartData} cx="50%" cy="50%" labelLine={false} outerRadius={80} fill="#8884d8" dataKey="value" label={({
+                      name,
+                      percent
+                    }) => `${name} ${(percent * 100).toFixed(0)}%`}>
                             {pieChartData.map((entry, index) => <Cell key={`cell-${index}`} fill={themeColors.chartColors[index % themeColors.chartColors.length]} />)}
                           </Pie>
-                          <Tooltip formatter={(value) => [`${value.toLocaleString('fr-FR')}€`, 'Montant']} contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px' }} />
+                          <Tooltip formatter={value => [`${value.toLocaleString('fr-FR')}€`, 'Montant']} contentStyle={{
+                      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '8px'
+                    }} />
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
@@ -184,7 +189,11 @@ export function Reports() {
                           <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                           <XAxis dataKey="name" stroke="#aaa" />
                           <YAxis stroke="#aaa" />
-                          <Tooltip formatter={(value) => [`${value.toLocaleString('fr-FR')}€`, '']} contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px' }} />
+                          <Tooltip formatter={value => [`${value.toLocaleString('fr-FR')}€`, '']} contentStyle={{
+                      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '8px'
+                    }} />
                           <Legend />
                           <Bar dataKey="revenus" fill={themeColors.chartColors[1]} />
                           <Bar dataKey="dépenses" fill={themeColors.chartColors[0]} />
