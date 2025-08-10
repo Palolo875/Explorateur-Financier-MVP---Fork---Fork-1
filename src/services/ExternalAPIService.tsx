@@ -166,6 +166,21 @@ class ExternalAPIService {
       activity: activities[Math.floor(Math.random() * activities.length)]
     };
   }
+
+  // Advice API
+  async getAdvice(mood: number): Promise<{ advice: string } | null> {
+    // Mock implementation for demo purposes
+    const advices = [
+      'Prenez le temps de réfléchir avant tout achat important',
+      'Établissez un budget mensuel et respectez-le',
+      'Épargnez au moins 10% de vos revenus',
+      'Diversifiez vos investissements',
+      'Évitez les dettes à taux élevé'
+    ];
+    return {
+      advice: advices[Math.floor(Math.random() * advices.length)]
+    };
+  }
 }
 // Create singleton instance
 export const externalApiService = ExternalAPIService.getInstance();

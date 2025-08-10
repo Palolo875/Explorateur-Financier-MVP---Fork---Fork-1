@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { GlassCard } from './ui/GlassCard';
 import { useTheme } from '../context/ThemeContext';
 import { useFinance } from '../context/FinanceContext';
-import { FileBarChartIcon, CheckCircleIcon, CalendarIcon, BookIcon } from 'lucide-react';
+import { FileBarChartIcon, CheckCircleIcon, CalendarIcon, BookIcon, PieChart, BarChart } from 'lucide-react';
 import { Chart } from './ui/Chart';
 import dayjs from 'dayjs';
 import 'dayjs/locale/fr';

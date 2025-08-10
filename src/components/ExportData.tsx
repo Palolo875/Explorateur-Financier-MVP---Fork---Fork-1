@@ -4,6 +4,7 @@ import { FinancialItem } from '../types/finance';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useFinance } from '../context/FinanceContext';
+import { useNavigate } from 'react-router-dom';
 import { DownloadIcon, FileSpreadsheetIcon, FileJsonIcon, CheckIcon, ClockIcon, AlertCircleIcon } from 'lucide-react';
 import { toast, Toaster } from 'react-hot-toast';
 type ExportFormat = 'csv' | 'pdf' | 'json' | 'excel';
@@ -33,6 +34,7 @@ export function ExportData() {
     calculateTotalExpenses,
     calculateNetWorth
   } = useFinance();
+  const navigate = useNavigate();
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('csv');
   const [includePersonalData, setIncludePersonalData] = useState(true);
   const [includeHistoricalData, setIncludeHistoricalData] = useState(true);

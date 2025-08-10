@@ -109,6 +109,12 @@ export function BudgetPlanner() {
   const totalPlanned = budgetCategories.reduce((sum, category) => sum + category.planned, 0);
   const totalActual = budgetCategories.reduce((sum, category) => sum + category.actual, 0);
   const remainingBudget = totalPlanned - totalActual;
+  
+  // Calculer le revenu total pour les conseils
+  const totalIncome = financialData?.incomes?.reduce((sum, income) => {
+    const value = typeof income.value === 'number' ? income.value : parseFloat(income.value) || 0;
+    return sum + value;
+  }, 0) || 0;
   // Préparer les données pour les graphiques
   const barChartData = budgetCategories.map(category => ({
     name: category.name,

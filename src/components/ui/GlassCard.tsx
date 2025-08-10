@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 interface GlassCardProps {
-  children: ReactNode;
+  children: React.ReactNode;
   className?: string;
   animate?: boolean;
   hover?: boolean;

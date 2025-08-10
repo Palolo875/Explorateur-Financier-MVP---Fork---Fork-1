@@ -121,3 +121,26 @@ export interface User {
   email: string;
   name: string;
 }
+
+export interface WeatherData {
+  location: string;
+  temperature: number;
+  condition: string;
+  humidity: number;
+  windSpeed: number;
+  icon: string;
+}
+
+export interface MarketIndexData {
+  name: string;
+  value: number;
+  changePercent: number;
+}
+
+export interface CountryEconomicData {
+  country: string;
+  gdp: number;
+  inflation: number;
+  unemployment: number;
+  debt: number;
+}

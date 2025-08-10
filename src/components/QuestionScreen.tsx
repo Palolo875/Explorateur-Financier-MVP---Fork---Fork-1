@@ -13,7 +13,6 @@ import { useFinance } from '../context/FinanceContext'
 import { useFinanceStore } from '../stores/financeStore'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { useTheme } from '../context/ThemeContext'
 import { externalApiService } from '../services/ExternalAPIService'
 import { useWeatherData } from '../services/ExternalAPIService'
 import { NewsArticle } from '../types/finance'
@@ -38,6 +37,7 @@ export function QuestionScreen() {
     author: string
   } | null>(null)
   const [relatedNews, setRelatedNews] = useState<NewsArticle[]>([])
+  const [newsLoading, setNewsLoading] = useState(false)
   const [advice, setAdvice] = useState<string | null>(null)
   // Récupérer une citation inspirante au chargement
   useEffect(() => {
